@@ -31,15 +31,30 @@ def bytesToList(bStr):
             
     return dList
 
-#check com port. the last parameter is the timeout.
-ser = serial.Serial('COM7', 9600, serial.EIGHTBITS, serial.PARITY_EVEN, 
+#some variables
+countTime = "1e7"
+countTimeFloat = 1.0
+numCounts = "5"
+dwellTime = "1e-1"
+dwellTimeFloat = 0.1
+
+
+#ask for the com port and the filename, create file, write headers
+comPort = input("Enter com port: ")
+fileName = input("Enter filename: include .txt: ")
+file = open(fileName, "w+")
+file.write("Time\tCounts\n")
+
+#the last parameter is the timeout.
+ser = serial.Serial(comPort, 9600, serial.EIGHTBITS, serial.PARITY_EVEN, 
                     serial.STOPBITS_ONE, 2)
 
 #set count time, set num counts, set dwell time, reset counts, press start
-ser.write(enc('cp2, 1e7; np5; dt 1e-1; cr; cs \r'))
+ser.write(enc('cp2, %s; np%s; dt %s; cr; cs \r' %(countTime, numCounts,
+                                                  dwellTime)))
 
 #set a pause
-time.sleep(6)
+time.sleep(int(numCounts) + 1)
 
 #ask to get data from A, stores in data variable, stops counting
 ser.write(enc('ea \r'))
@@ -48,7 +63,14 @@ data = ser.read(1000) #set to some large value of bytes. rely on timeout to end
 print(data)
 print(type(data))
 
+#formats data into a list
 dataList = bytesToList(data)
 
+for i in range(0, int(numCounts)):
+    print("cur loop val ", i)
+    file.write("%f" %(i * (dwellTimeFloat + countTimeFloat)) + "\t" + 
+               str(dataList[i]) + "\n")
+
+file.close()
 print(dataList)
 ser.close()
