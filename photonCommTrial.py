@@ -2,7 +2,7 @@
 """
 Fuming Qiu
 06/22/2017
-simple communcation with the photon counter through serial. sets counter times
+simple communication with the photon counter through serial. sets counter times
 and reads data at the end
 """
 
