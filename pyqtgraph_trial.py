@@ -6,26 +6,13 @@ display a graph using pyqtgraph and qtpy packages
 """
 
 import pyqtgraph as pg
-from qtpy import QtGui, QtCore
+from qtpy import QtGui
 import numpy as np
 
 
 app = QtGui.QApplication([])
 w = QtGui.QWidget()
 plot = pg.PlotWidget()
-
-class photonGraph(pg.PlotWidget):
-    def __init__(self):
-        super(photonGraph, self).__init__()
-        self.img = pg.ImageItem()
-        self.addItem(self.img)
-        
-
-
-
-
-
-
 
 
 x = np.random.normal(size=1000)
