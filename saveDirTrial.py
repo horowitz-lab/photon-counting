@@ -25,17 +25,20 @@ def saveData(path):
 #auto date entry
 date = datetime.date.today().isoformat()
 folders = ["data", date]
+temp = ["temp", date]
 
 """
 #relative path option: will most likely use absolute path option
 #saveDir = os.getcwd()
 """
 saveDir = os.getcwd()
+tempDir = os.getcwd()
 #saveDir = "C:\\Users\\HorowitzLab\\Documents"
 
 #make new directory if not exist
 for folder in folders:
     saveDir = os.path.join(saveDir, folder)
+    tempDir = os.path.join(tempDir, folder)
 if not(os.path.exists(saveDir)):
     os.makedirs(saveDir)
 
@@ -49,3 +52,12 @@ while os.path.isfile(saveDir):
     saveDir = saveDir[:-4] + "_new" + saveDir[-4:]
 
 saveData(saveDir)
+
+#prompt for save data
+print("here is the file: ")
+print(open(saveDir).read())
+
+if not(input("type y to save file, anything else \
+              to delete: ").lower() == "y"):
+    os.remove(saveDir)
+    
