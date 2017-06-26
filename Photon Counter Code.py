@@ -18,32 +18,35 @@ import numpy as np
 #------------------------------List of Widgets--------------------------------#
 
 """
-7 QLabels:
-    1. TSETLabel ("Duration of Time Bins")
-    2. NPERLabel ("# of Periods")
-    3. TimeLabel ("Time")
-    4. GLabel ("Average Photon Count")
-    5. TotLabel ("Overall Average Count")
-    6. StDevLabel ("St. Dev")
-    7. StErrLabel ("St. Err")
+13 QLabels:
+    
+    7 text labels:
+    
+        1. TSETLabel ("Duration of Time Bins")
+        2. NPERLabel ("# of Periods")
+        3. TimeLabel ("Time")
+        4. GLabel ("Average Photon Count")
+        5. TotLabel ("Overall Average Count")
+        6. StDevLabel ("St. Dev")
+        7. StErrLabel ("St. Err")
+    
+    6 Value Labels (VL)
+    
+        1. NPerVL
+        2. TimeVL
+        3. PhotonVL
+        4. TotAvgVL
+        5. StDevVL
+        6. StErrVL
     
 1 QSlider:
     NPerSlider
         Assigns new value to NPERIODS
             
-6 QTextEdits:
-    1. TSETBox
+1 QTextEdit:
+    TSETBox
         Displays TSET <---> Assigns new value to TSET
-    2. TimeBox
-        Displays Time
-    3. GBox
-        Displays GroupAvg
-    4. TotBox
-        Displays TotAvg
-    5. StDevBox
-        Displays StDev
-    6. StErrBox
-        Displays StErr
+
 
 2 QPushButtons:
     1. StartBtn
@@ -62,15 +65,7 @@ import numpy as np
 
 #-----------------------Establishing Global(?) Variables----------------------#
 
-GroupTally = 0
-
-Time = 0
-
 GroupAvg = []
-TotalAvg = 0
-StDev = 0
-StErr = 0
-
 StopFlag = 0
 
 """Add entries to GroupAvg
@@ -91,6 +86,7 @@ TSETInst = ''
 DWELL = '2e-3'
 
 #-------------------------------Fuming's Functions----------------------------#
+
 def enc(str):
     return str.encode('ascii')
 
@@ -126,7 +122,7 @@ def NPERSet():
     NPERIODS = NPERSlider.value()
     NPERInst= 'np' + str(NPERIODS) + '; '
 
-#occurs within StartFXN        
+#occurs within Start_fxn        
 def Update():
     self.TimeVal.setText(str(Time))
     self.GVal.setText(str(GroupAvg[NTally]))
@@ -136,6 +132,7 @@ def Update():
     
 #self.StopBtn.clicked.connect(StopFXN)
 def Stop_fxn():
+    StopFlag = 1
     ser.write(enc('cr \r'))
     StartBtn.setEnabled(True)
 
@@ -159,7 +156,5 @@ def Start_fxn():
         StErr = StDev/sqrt(NTally)
         Update()
         #plot data function goes here
-
-    
 
 print(GroupAvg)
