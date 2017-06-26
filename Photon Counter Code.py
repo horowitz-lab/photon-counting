@@ -8,7 +8,7 @@ Created on Fri Jun 23 14:23:25 2017
 
 #--------------------------------Library Imports------------------------------#
 
-from qtpy import QtGui
+from PyQt5 import QtGui
 import numpy as np
 import sys
 import sr400_GUI
@@ -38,9 +38,9 @@ TSETInst = ''
 
 DWELL = 2e-3
 
-class MainApp(QtGui.QMainWindow, SR400_GUI.Ui_MainWindow):
+class MainApp(QtGui.QMainWindow, sr400_GUI.Ui_Form):
     def __init__(self, parent=None):
-        super(MainApp, self).__init__(parent)
+        super(self.__class__, self).__init__(parent)
         self.setupUi(self)
         
         print('Check 2')
@@ -133,6 +133,9 @@ class MainApp(QtGui.QMainWindow, SR400_GUI.Ui_MainWindow):
 def main():
     app = QtGui.QApplication(sys.argv)
     form = MainApp
+    
+    print(type(MainApp))
+    
     form.show()
     app.exec_()
     
