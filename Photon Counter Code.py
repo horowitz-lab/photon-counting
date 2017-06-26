@@ -9,8 +9,24 @@ Created on Fri Jun 23 14:23:25 2017
 #--------------------------------Library Imports------------------------------#
 
 """IMPORT STATEMENTS GO HERE"""
+from QtPy import QtGui
 import numpy as np
+import sys
+import SR400_GUI
 
+class MainApp(QtGui.QMainWindow, SR400_GUI.Ui_MainWindow):
+    def __init__(self, parent=None):
+        super(MainApp, self).__init__(parent)
+        self.setupUi(self)
+        
+def main():
+    app = QtGui.QApplication(sys.argv)
+    form = MainApp
+    form.show()
+    app.exec_()
+    
+if __name__ == '__main__':
+    main()    
 #------------------------------------GUI Setup--------------------------------#
 
 """GUI SETUP/DISPLAY GOES HERE"""
