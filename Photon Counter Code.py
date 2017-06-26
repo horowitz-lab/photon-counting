@@ -3,7 +3,7 @@
 """
 Created on Fri Jun 23 14:23:25 2017
 
-@author: Ho
+@author: Houghton Yonge and Fuming Qiu
 """
 
 #--------------------------------Library Imports------------------------------#
@@ -49,11 +49,13 @@ import numpy as np
     1. StartBtn
         Disables itself (state = DISABLED?)
         Starts data collection
+            self.StartBtn.clicked.connect(StartFXN)
     2. StopBtn
         Stops data collection
             Updates data readings & variable values
             Adds latest data from group of NPERIODS observations to QTGraph
         Reenables StartBtn
+            self.StopBtn.clicked.connect(StopFXN)
     
 1 QTGraph
 """
@@ -81,12 +83,12 @@ ser = serial.Serial('COM#', 9600, serial.EIGHTBITS, seria.PARITY_EVEN,
                     serial.STOPBITS_ONE, 2)
 
 #Counter parameters controlled by GUI
-NPERIODS = NPERBox
-NPERInst = 'np' + NPERIODS
-TSET = TSETBox
-TSETInst = 'cp2, ' + TSET
+NPERIODS = 0
+TSET = 0
+NPERInst = ''
+TSETInst = ''
 
-DWELL = 2e-3
+DWELL = '2e-3'
 
 #-------------------------------Fuming's Functions----------------------------#
 def enc(str):
@@ -97,7 +99,7 @@ def DataDump():
     data = ser.read(1000)
     return data
 
-def BytesToList(BStr):t
+def BytesToList(BStr):
     dList = []
     curVal = 0
     #Iterate through bytes to add numbers to dList
@@ -114,30 +116,50 @@ def BytesToList(BStr):t
 
 #----------------------------GUI Widget Functions-----------------------------#
 
-#NPerSlider
+#self.TSETBox.textchanged.connect(TSET_fxn)
+def TSET_fxn():
+    TSET = TSETBox.toPlainText()
+    TSETInst = 'cp2, ' + TSET + '; '
 
-def NPERSet(tick
+#self.NPerSlider.valueChanged.connect(NPERSet)
+def NPERSet():
+    NPERIODS = NPERSlider.value()
+    NPERInst= 'np' + str(NPERIODS) + '; '
 
+#occurs within StartFXN        
+def Update():
+    self.TimeVal.setText(str(Time))
+    self.GVal.setText(str(GroupAvg[NTally]))
+    self.TotVal.setText(str(TotalAvg))
+    self.StDevVal.setText(str(StDev))
+    self.StErrVal.setText(str(StErr))
+    
+#self.StopBtn.clicked.connect(StopFXN)
+def Stop_fxn():
+    ser.write(enc('cr \r'))
+    StartBtn.setEnabled(True)
 
 #-----------------------The Infinite Data Collection Loop---------------------#
 
-def StartFXN():
+def Start_fxn():
+    StartBtn.setEnabled(False)
     ser.write(enc(TSETInst + '; ' 
                   + NPERInst + '; ' 
-                  + 'dt ' + str(DWELL) + '; '
+                  + 'dt ' + DWELL + '; '
                   + 'cr; cs \r'))
     while StopFlag == 0:
         time.sleep(6)
         data = DataDump()
         dataList = BytesToList(data)
-        NTally= NTally + 1
+        NTally = NTally + 1
         Time = NTally * (NPERIODS * (TSET + DWELL))
         GroupAvg.append(np.mean(dataList))
         TotalAvg = np.mean(GroupAvg)
         StDev = np.sd(GroupAvg)
         StErr = StDev/sqrt(NTally)
+        Update()
         #plot data function goes here
-        
+
     
 
 print(GroupAvg)
