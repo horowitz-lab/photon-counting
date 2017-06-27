@@ -7,14 +7,30 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from pyqtgraph import PlotWidget
+import numpy as np
+
 
 class Ui_Form(object):
+    _x = []
+    _y = []
+    
+    def __init__(self, Form):
+        super().__init__()
+        self.setupUi(Form)
+        
+    def setData(self):
+        print("being reset")
+        self._x = np.random.normal(size=100)
+        self._y = np.random.normal(size=100)
+        
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(817, 630)
         self.Graph = PlotWidget(Form)
         self.Graph.setGeometry(QtCore.QRect(10, 150, 791, 471))
         self.Graph.setObjectName("Graph")
+        self.Graph.plot(self._x, self._y, pen = None, symbol = 'o')
         self.widget = QtWidgets.QWidget(Form)
         self.widget.setGeometry(QtCore.QRect(10, 40, 251, 33))
         self.widget.setObjectName("widget")
@@ -187,6 +203,8 @@ class Ui_Form(object):
         self.retranslateUi(Form)
         self.NPERSlider.valueChanged['int'].connect(self.NPERVL.setNum)
         QtCore.QMetaObject.connectSlotsByName(Form)
+        
+        Form.show()
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
@@ -212,8 +230,7 @@ class Ui_Form(object):
         self.StErrLabel.setText(_translate("Form", "St. Err"))
         self.StErrVL.setText(_translate("Form", "0"))
 
-from pyqtgraph import PlotWidget
-
+"""
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -222,4 +239,4 @@ if __name__ == "__main__":
     ui.setupUi(Form)
     Form.show()
     sys.exit(app.exec_())
-
+"""

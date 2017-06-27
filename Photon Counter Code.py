@@ -10,7 +10,7 @@ Created on Fri Jun 23 14:23:25 2017
 
 from PyQt5 import QtWidgets
 import sys
-import sr400withGraph
+import SR400_GUI
 import serial as ser
 
 #-----------------------Establishing Global(?) Variables----------------------#
@@ -37,7 +37,7 @@ TSETInst = ''
 
 DWELL = 2e-3
 
-class MainApp(sr400withGraph.Ui_Form):
+class MainApp(SR400_GUI.Ui_Form):
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
         print('Check 2')
