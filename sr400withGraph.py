@@ -19,6 +19,7 @@ class Ui_Form(QtWidgets.QWidget):
         self.setupUi(Form)
 
     def setData(self):
+        print("being reset")
         self._x = np.random.normal(size=100)
         self._y = np.random.normal(size=100)
         

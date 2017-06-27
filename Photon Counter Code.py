@@ -41,6 +41,12 @@ class MainApp(sr400withGraph.Ui_Form):
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
         print('Check 2')
+        
+        #button connections to functions
+        self.NPERSlider.valueChanged.connect(self.NPERSet)
+        self.StartBtn.clicked.connect(self.Start_fxn)
+        self.StopBtn.clicked.connect(self.Stop_fxn)
+        self.TSETBox.textChanged.connect(self.TSET_fxn)
 #----------------------GUI-Serial Connection Functions------------------------#
 
     def enc(self, str):
@@ -96,8 +102,8 @@ class MainApp(sr400withGraph.Ui_Form):
         print('Start Button works!')
         
         #making start do new random graph data
-        super(self).setData()
-        
+        self.setData()
+        self.Graph.plot(self._x, self._y, pen = None, symbol = 'o')
         """
         StartBtn.setEnabled(False)
         ser.write(enc(TSETInst 
@@ -124,11 +130,7 @@ class MainApp(sr400withGraph.Ui_Form):
             self.StDevVL.setText(str(StDev))
             self.StErrVL.setText(str(StErr))
             """
-        #self.TSETBox.textChanged.connect(TSET_fxn)
-        self.NPERSlider.valueChanged.connect(self.NPERSet)
-        self.StartBtn.clicked.connect(self.Start_fxn)
-        self.StopBtn.clicked.connect(self.Stop_fxn)
-        self.TSETBox.textChanged.connect(self.TSET_fxn)
+        
     
 
 def main():
