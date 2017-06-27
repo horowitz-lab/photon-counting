@@ -8,7 +8,7 @@ Created on Fri Jun 23 14:23:25 2017
 
 #--------------------------------Library Imports------------------------------#
 
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtWidgets
 import sys
 import sr400_GUI
 import serial as ser
@@ -68,26 +68,21 @@ class MainApp(sr400_GUI.Ui_Form):
                     curVal = curVal * 10 + b - 48
             return dList
         
-#--------------------------GUI Widget Functions-------------------------------#        
-        
-        """self.TSETBox.textChanged.connect(TSET_fxn)
-        self.NPERSlider.valueChanged.connect(NPERSet)
-        self.StartBtn.clicked.connect(Start_fxn)
-        self.StopBtn.clicked.connect(Stop_fxn)"""
-        
-        def TSET_fxn(self):
-            print('Oliver is too boojee to know what FAFSA is')
-            """
-            TSETText = TSETBox.toPlainText()
-            TSET = int(TSETText)
-            TSETInst = 'cp2, ' + TSETText + '; '
-            """
+#--------------------------GUI Widget Functions-------------------------------#
             
         def NPERSet(self):
             print('Harry Thomas is a weebo')
             """
             NPERIODS = NPERSlider.value()
             NPERInst = 'np' + str(NPERIODS) + '; '
+            """
+            
+        def TSET_fxn(self):
+            print('Oliver is too boojee to know what FAFSA is')
+            """
+            TSETText = TSETBox.toPlainText()
+            TSET = int(TSETText)
+            TSETInst = 'cp2, ' + TSETText + '; '
             """
             
         def Stop_fxn(self):
@@ -129,21 +124,18 @@ class MainApp(sr400_GUI.Ui_Form):
             self.StErrVL.setText(str(StErr))
         """
 
-        self.TSETBox.textChanged.connect(TSET_fxn)
+        #self.TSETBox.textChanged.connect(TSET_fxn)
         self.NPERSlider.valueChanged.connect(NPERSet)
         self.StartBtn.clicked.connect(Start_fxn)
         self.StopBtn.clicked.connect(Stop_fxn)
-
+        self.TSETBox.textChanged.connect(TSET_fxn)
 
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QWidget()
     form = MainApp(window)
-    
-    form.showWidgets()
-    
     print(type(MainApp))
     sys.exit(app.exec_())
 
-main()    
+main()

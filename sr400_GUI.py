@@ -7,12 +7,16 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import numpy as np
+import pyqtgraph as pg
 
 class Ui_Form(QtWidgets.QWidget):
     def __init__(self, Form):
         super().__init__()
         self.setupUi(Form)
         print("in init")
+        _xVals = np.random.normal(size = 20)
+        _yVals = np.random.normal(size = 20)
         
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -174,9 +178,6 @@ class Ui_Form(QtWidgets.QWidget):
         self.TotAvgVL.setText(_translate("Form", "0"))
         self.StErrLabel.setText(_translate("Form", "St. Err"))
         self.StErrVL.setText(_translate("Form", "0"))
-        
-    def showWidgets(self):
-        print("asdf")
         
         
         
