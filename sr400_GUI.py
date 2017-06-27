@@ -168,3 +168,11 @@ class Ui_Form(object):
         self.StErrLabel.setText(_translate("Form", "St. Err"))
         self.StErrVL.setText(_translate("Form", "0"))
 
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_Form()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
