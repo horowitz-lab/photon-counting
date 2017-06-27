@@ -8,11 +8,10 @@ Created on Fri Jun 23 14:23:25 2017
 
 #--------------------------------Library Imports------------------------------#
 
-from PyQt5 import QtGui
-import numpy as np
+from PyQt5 import QtGui, QtWidgets
 import sys
 import sr400_GUI
-import serial
+import serial as ser
 
 #-----------------------Establishing Global(?) Variables----------------------#
 Time = 0
@@ -38,7 +37,7 @@ TSETInst = ''
 
 DWELL = 2e-3
 
-class MainApp(QtGui.QMainWindow, sr400_GUI.Ui_Form):
+class MainApp(sr400_GUI.Ui_Form):
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
         self.setupUi(self)
@@ -71,10 +70,10 @@ class MainApp(QtGui.QMainWindow, sr400_GUI.Ui_Form):
         
 #--------------------------GUI Widget Functions-------------------------------#        
         
-        self.TSETBox.textChanged.connect(TSET_fxn)
+        """self.TSETBox.textChanged.connect(TSET_fxn)
         self.NPERSlider.valueChanged.connect(NPERSet)
         self.StartBtn.clicked.connect(Start_fxn)
-        self.StopBtn.clicked.connect(Stop_fxn)
+        self.StopBtn.clicked.connect(Stop_fxn)"""
         
         def TSET_fxn(self):
             print('Oliver is too boojee to know what FAFSA is')
@@ -130,14 +129,21 @@ class MainApp(QtGui.QMainWindow, sr400_GUI.Ui_Form):
             self.StErrVL.setText(str(StErr))
         """
 
+        self.TSETBox.textChanged.connect(TSET_fxn)
+        self.NPERSlider.valueChanged.connect(NPERSet)
+        self.StartBtn.clicked.connect(Start_fxn)
+        self.StopBtn.clicked.connect(Stop_fxn)
+
+
+
 def main():
-    app = QtGui.QApplication(sys.argv)
-    form = MainApp
+    app = QtWidgets.QApplication(sys.argv)
+    window = QtWidgets.QWidget()
+    form = MainApp(window)
+    
+    form.showWidgets()
     
     print(type(MainApp))
-    
-    form.show()
-    app.exec_()
-    
+    sys.exit(app.exec_())
 
 main()    

@@ -8,7 +8,12 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_Form(object):
+class Ui_Form(QtWidgets.QWidget):
+    def __init__(self, Form):
+        super().__init__()
+        self.setupUi(Form)
+        print("in init")
+        
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(674, 249)
@@ -142,6 +147,8 @@ class Ui_Form(object):
         self.retranslateUi(Form)
         self.NPERSlider.valueChanged['int'].connect(self.NPERVL.setNum)
         QtCore.QMetaObject.connectSlotsByName(Form)
+        
+        Form.show()
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
@@ -167,4 +174,16 @@ class Ui_Form(object):
         self.TotAvgVL.setText(_translate("Form", "0"))
         self.StErrLabel.setText(_translate("Form", "St. Err"))
         self.StErrVL.setText(_translate("Form", "0"))
-
+        
+    def showWidgets(self):
+        print("asdf")
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

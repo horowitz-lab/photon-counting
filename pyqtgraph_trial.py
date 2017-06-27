@@ -6,12 +6,15 @@ display a graph using pyqtgraph and qtpy packages
 """
 
 import pyqtgraph as pg
-from qtpy import QtGui
+from PyQt5 import QtGui
 import numpy as np
 
 
 app = QtGui.QApplication([])
 w = QtGui.QWidget()
+
+print(type(w))
+
 plot = pg.PlotWidget()
 
 
