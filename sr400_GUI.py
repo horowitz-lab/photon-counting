@@ -11,18 +11,13 @@ from pyqtgraph import PlotWidget
 import numpy as np
 
 
-class Ui_Form(object):
-    _x = []
-    _y = []
-    
+class Ui_Form(object): 
     def __init__(self, Form):
         super().__init__()
         self.setupUi(Form)
         
     def setData(self):
-        print("being reset")
-        self._x = np.random.normal(size=100)
-        self._y = np.random.normal(size=100)
+        print("set data function")
         
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -30,7 +25,7 @@ class Ui_Form(object):
         self.Graph = PlotWidget(Form)
         self.Graph.setGeometry(QtCore.QRect(10, 150, 791, 471))
         self.Graph.setObjectName("Graph")
-        self.Graph.plot(self._x, self._y, pen = None, symbol = 'o')
+        self.Graph.plot(pen = None, symbol = 'o')
         self.widget = QtWidgets.QWidget(Form)
         self.widget.setGeometry(QtCore.QRect(10, 40, 251, 33))
         self.widget.setObjectName("widget")
