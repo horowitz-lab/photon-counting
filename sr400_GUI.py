@@ -6,9 +6,22 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+#need these imports
 from PyQt5 import QtCore, QtGui, QtWidgets
+from pyqtgraph import PlotWidget
+#need these imports
 
 class Ui_Form(object):
+    #####not pyuic code start###################################
+    def __init__(self, Form):
+        super().__init__()
+        self.setupUi(Form)
+        
+    def setData(self):
+        print("set data function")
+    ########not pyuic code end########################
+    
+    
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(824, 630)
@@ -179,6 +192,10 @@ class Ui_Form(object):
         self.retranslateUi(Form)
         self.NPERSlider.valueChanged['int'].connect(self.NPERVL.setNum)
         QtCore.QMetaObject.connectSlotsByName(Form)
+        
+        
+        ####################need formshow######################################
+        Form.show()
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
@@ -203,15 +220,4 @@ class Ui_Form(object):
         self.StDevVL.setText(_translate("Form", "0"))
         self.StErrLabel.setText(_translate("Form", "St. Err"))
         self.StErrVL.setText(_translate("Form", "0"))
-
-from pyqtgraph import PlotWidget
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
-    sys.exit(app.exec_())
 
