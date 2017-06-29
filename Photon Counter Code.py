@@ -15,11 +15,12 @@ import sr400_GUI
 import serial
 import time
 
+"""
 #############com port##################################
 comPort = 'COM5'
 
 print('Check 1')
-ser = serial.Serial(comPort, timeout = 2)
+ser = serial.Serial(comPort, timeout = 2)"""
 
 
 class MainApp(sr400_GUI.Ui_Form):
@@ -140,6 +141,6 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QWidget()
     form = MainApp(window)
-    sys.exit(app.exec_())
+    app.exec_()
 
 main()
