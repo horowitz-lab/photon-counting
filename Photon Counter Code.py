@@ -15,13 +15,11 @@ import sr400_GUI
 import serial
 import time
 
-"""
 #############com port##################################
 comPort = 'COM5'
 
 print('Check 1')
-ser = serial.Serial(comPort, timeout = 2)"""
-
+ser = serial.Serial(comPort)
 
 class MainApp(sr400_GUI.Ui_Form):
     #-------------------Establishing Variables--------------------------------#
@@ -40,7 +38,6 @@ class MainApp(sr400_GUI.Ui_Form):
     NPERIODS = 0
     TSET = 0
     NPERInst = ''
-    TSETInst = ''
     
     Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     Exponents = ["0",] + Bases + ["10", "11"]
@@ -53,18 +50,20 @@ class MainApp(sr400_GUI.Ui_Form):
         self.NPERSlider.valueChanged.connect(self.NPERSet)
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
-        self.TSETBox.textChanged.connect(self.TSET_fxn)
 #----------------------GUI-Serial Connection Functions------------------------#
 
     def enc(self, str):
+        """returns the ascii version of strings"""
         return str.encode('ascii')
         
     def DataDump(self):
+        """asks the sr400 for data and reads and returns what is sent"""
         ser.write(self.enc('ea \r'))
         data = ser.read(1000)
         return data
         
     def BytesToList(self, BStr):
+        """converts a bytestring to a list of ints"""
         dList = []
         curVal = 0
         #Iterate through bytes to add numbers to dList
@@ -79,6 +78,9 @@ class MainApp(sr400_GUI.Ui_Form):
                 curVal = curVal * 10 + b - 48
         return dList
     
+    def TSETtoInt(self, text):
+        """converts a string of the form NUMeNUM to an int"""
+        return int(text[0]) * 10 ** int(text[2:])
 #--------------------------GUI Widget Functions-------------------------------#
             
     def NPERSet(self):
@@ -90,17 +92,17 @@ class MainApp(sr400_GUI.Ui_Form):
         
         
     def TSET_fxn(self):
-        print('Text box works!')
         TSETText = self.TSETBox.toPlainText()
+        print(TSETText)
         assert TSETText[0] in self.Bases, "Base must be a \
             non-zero number!"
         assert TSETText[1] == "e", "Second character must be e for \
             base-exponent notation!"
         assert TSETText[2] in self.Exponents, "Exponent must range \
             from 0 to 11!"
-        self.TSET = int(TSETText)
-        TSETInst = 'cp2, ' + TSETText + ' \r'
-        ser.write(self.enc(TSETInst))
+        self.TSET = self.TSETtoInt(TSETText)
+        TSETInst = 'cp2, ' + TSETText + '; '
+        return TSETInst
         
     def Stop_fxn(self):
         self.StopBtn.setEnabled(False)
@@ -114,23 +116,28 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StopBtn.setEnabled(True)
         print('Start Button works!')
         
-        #making start do new random graph data
-        self.setData()
-        self.Graph.plot(self._x, self._y, pen = None, symbol = 'o')
         self.StartBtn.setEnabled(False)
-        ser.write(self.enc(str(self.DWELL) + '; cr; cs \r'))
+        #ser.write(self.enc(self.TSET_fxn() + ' \r'))
+        ser.write(self.enc(self.TSET_fxn() + str(self.DWELL) + '; cr; cs \r'))
         while self.StopFlag == 0:
             time.sleep(6)
             data = self.DataDump()
             dataList = self.BytesToList(data)
             self.GroupTally += 1
-            self.timeVal = self.GroupTally * (
-                           self.NPERIODS * (self.TSET + self.DWELL))
+            
+            groupTime = self.NPERIODS * (self.TSET + self.DWELL)
+            self.timeVal = self.GroupTally * groupTime
             self.GroupAvg.append(np.mean(dataList))
             self.TotalAvg = np.mean(self.GroupAvg)
             self.StDev = np.std(self.GroupAvg)
             self.StErr = self.StDev / np.sqrt(self.GroupTally)
-            self.Graph.plot(self._x, self._y, pen = None, symbol = 'o')
+            
+            #graph newest vals and add values to timeList
+            self.Graph.plot(self.timeVal, self.GroupAvg[-1] / groupTime, 
+                            pen = None, symbol = 'o')
+            self._timeList.append(self.timeVal)
+            
+            
             self.Update()
             print(self.GroupAvg)
             

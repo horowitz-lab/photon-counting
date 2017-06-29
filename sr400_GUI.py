@@ -12,14 +12,14 @@ from pyqtgraph import PlotWidget
 #need these imports
 
 class Ui_Form(object):
-    #####not pyuic code start###################################
+    ##### not pyuic code start ###################################
+    _timeList = []
+    
     def __init__(self, Form):
         super().__init__()
         self.setupUi(Form)
         
-    def setData(self):
-        print("set data function")
-    ########not pyuic code end########################
+    ######## not pyuic code end ########################
     
     
     def setupUi(self, Form):
@@ -188,14 +188,16 @@ class Ui_Form(object):
         self.Graph = PlotWidget(Form)
         self.Graph.setObjectName("Graph")
         self.gridLayout.addWidget(self.Graph, 3, 0, 1, 7)
-
         self.retranslateUi(Form)
         self.NPERSlider.valueChanged['int'].connect(self.NPERVL.setNum)
         QtCore.QMetaObject.connectSlotsByName(Form)
         
         
-        ####################need formshow######################################
+        ########### also extra#################################################
         Form.show()
+        
+        ######################## end extra #################
+
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
