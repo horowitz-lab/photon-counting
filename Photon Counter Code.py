@@ -41,6 +41,9 @@ class MainApp(sr400_GUI.Ui_Form):
     NPERInst = ''
     TSETInst = ''
     
+    Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    Exponents = ["0",] + Bases + ["10", "11"]
+    
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
         print('Check 2')
@@ -88,11 +91,11 @@ class MainApp(sr400_GUI.Ui_Form):
     def TSET_fxn(self):
         print('Text box works!')
         TSETText = self.TSETBox.toPlainText()
-        assert TSETText[1] in self.Bases, "Base must be a \
+        assert TSETText[0] in self.Bases, "Base must be a \
             non-zero number!"
-        assert TSETText[2] == "e", "Second character must be e for \
+        assert TSETText[1] == "e", "Second character must be e for \
             base-exponent notation!"
-        assert TSETText[3] in self.Exponents, "Exponent must range \
+        assert TSETText[2] in self.Exponents, "Exponent must range \
             from 0 to 11!"
         self.TSET = int(TSETText)
         TSETInst = 'cp2, ' + TSETText + ' \r'
@@ -126,6 +129,7 @@ class MainApp(sr400_GUI.Ui_Form):
             self.TotalAvg = np.mean(self.GroupAvg)
             self.StDev = np.std(self.GroupAvg)
             self.StErr = self.StDev / np.sqrt(self.GroupTally)
+            self.Graph.plot(self._x, self._y, pen = None, symbol = 'o')
             self.Update()
             print(self.GroupAvg)
             
