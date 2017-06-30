@@ -16,21 +16,19 @@ def enc(str):
 rm = visa.ResourceManager()
 instList = rm.list_resources()
 
-
 print(instList)
 
 #get the GPIB port, set up inst object. then set timeout to 1s
-"""
-this code is currently useless since only one resource and it's not a 
-gpib port. it's still serial. just fudging with taking the first index for now
+
+#this code is currently useless since only one resource and it's not a 
+#gpib port. it's still serial. just fudging with taking the first index for now
 gpibName = ''
 for instr in instList:
     if instr.find('GPIB') == 0:
         gpibName = instr
-"""
 
-sr400 = rm.open_resource(instList[0])
-print(sr400.write('cs'))
+sr400 = rm.open_resource(instList[1])
+print(sr400.write('np1990'))
 
 """
 sr400.timeout = 1000
