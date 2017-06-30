@@ -15,11 +15,10 @@ import sr400_GUI
 import serial
 import time
 
-#############com port##################################
+############# com port and set dwell time ##################################
 comPort = 'COM5'
-
 print('Check 1')
-ser = serial.Serial(comPort)
+#ser = serial.Serial(comPort)
 
 class MainApp(sr400_GUI.Ui_Form):
     #-------------------Establishing Variables--------------------------------#
@@ -43,8 +42,11 @@ class MainApp(sr400_GUI.Ui_Form):
     Exponents = ["0",] + Bases + ["10", "11"]
     
     def __init__(self, parent=None):
+        """inits the parent class, sets dwell time, and sets gui functions"""
         super(self.__class__, self).__init__(parent)
         print('Check 2')
+        
+        ser.write(self.enc('DT ' + str(self.DWELL) + ';'))
         
         #button connections to functions
         self.NPERSlider.valueChanged.connect(self.NPERSet)
@@ -84,6 +86,7 @@ class MainApp(sr400_GUI.Ui_Form):
 #--------------------------GUI Widget Functions-------------------------------#
             
     def NPERSet(self):
+        """sets the number of data counts per time bin using the slider"""
         print('Slider works!')
         NPERIODS = self.NPERSlider.value()
         NPERInst = 'np' + str(NPERIODS) + ' \r'
@@ -92,19 +95,25 @@ class MainApp(sr400_GUI.Ui_Form):
         
         
     def TSET_fxn(self):
+        """sets the duration of a single data count in an instance variable
+           and returns the string corresponding to that command on the sr400"""
         TSETText = self.TSETBox.toPlainText()
         print(TSETText)
+        
         assert TSETText[0] in self.Bases, "Base must be a \
             non-zero number!"
         assert TSETText[1] == "e", "Second character must be e for \
             base-exponent notation!"
         assert TSETText[2] in self.Exponents, "Exponent must range \
             from 0 to 11!"
+        
+        #converts textbox string to int, creates and returns sr400 instruction
         self.TSET = self.TSETtoInt(TSETText)
         TSETInst = 'cp2, ' + TSETText + '; '
         return TSETInst
         
     def Stop_fxn(self):
+        """sets gui to stop counting and sends a reset command to sr400"""
         self.StopBtn.setEnabled(False)
         print('Stop Button works!')
         self.StopFlag = 1
@@ -113,12 +122,13 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.setEnabled(True)
     
     def Start_fxn(self):
+        """sends sr400 commands to set count parameters and gets data"""
         self.StopBtn.setEnabled(True)
         print('Start Button works!')
         
         self.StartBtn.setEnabled(False)
         #ser.write(self.enc(self.TSET_fxn() + ' \r'))
-        ser.write(self.enc(self.TSET_fxn() + str(self.DWELL) + '; cr; cs \r'))
+        ser.write(self.enc(self.TSET_fxn() + 'cr; cs \r'))
         while self.StopFlag == 0:
             time.sleep(6)
             data = self.DataDump()
