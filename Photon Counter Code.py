@@ -15,10 +15,10 @@ import sr400_GUI
 import serial
 import time
 
-############# com port and set dwell time ##################################
+############# com port ##################################
 comPort = 'COM5'
 print('Check 1')
-#ser = serial.Serial(comPort)
+ser = serial.Serial(comPort)
 
 class MainApp(sr400_GUI.Ui_Form):
     #-------------------Establishing Variables--------------------------------#
@@ -52,6 +52,12 @@ class MainApp(sr400_GUI.Ui_Form):
         self.NPERSlider.valueChanged.connect(self.NPERSet)
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
+        
+        #create a new file and properly name it #####################################
+        
+        
+        
+        
 #----------------------GUI-Serial Connection Functions------------------------#
 
     def enc(self, str):
@@ -129,27 +135,36 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.setEnabled(False)
         #ser.write(self.enc(self.TSET_fxn() + ' \r'))
         ser.write(self.enc(self.TSET_fxn() + 'cr; cs \r'))
-        while self.StopFlag == 0:
-            time.sleep(6)
-            data = self.DataDump()
-            dataList = self.BytesToList(data)
-            self.GroupTally += 1
+        
+        #get the current time, variable of how long to wait for data
+        curTime = time.clock()
+        dataTime = self.NPERIODS * (self.TSET + self.DWELL)
+        
+        while time.clock() - curTime < dataTime:
+            #query for other button
+            a = 1
             
-            groupTime = self.NPERIODS * (self.TSET + self.DWELL)
-            self.timeVal = self.GroupTally * groupTime
-            self.GroupAvg.append(np.mean(dataList))
-            self.TotalAvg = np.mean(self.GroupAvg)
-            self.StDev = np.std(self.GroupAvg)
-            self.StErr = self.StDev / np.sqrt(self.GroupTally)
-            
-            #graph newest vals and add values to timeList
-            self.Graph.plot(self.timeVal, self.GroupAvg[-1] / groupTime, 
-                            pen = None, symbol = 'o')
-            self._timeList.append(self.timeVal)
-            
-            
-            self.Update()
-            print(self.GroupAvg)
+        #get new data, store it
+        data = self.DataDump()
+        dataList = self.BytesToList(data)
+        
+        
+        self.GroupTally += 1
+        self.timeVal = self.GroupTally * dataTime
+        self.GroupAvg.append(np.mean(dataList))
+        self.TotalAvg = np.mean(self.GroupAvg)
+        self.StDev = np.std(self.GroupAvg)
+        self.StErr = self.StDev / np.sqrt(self.GroupTally)
+        
+        #graph newest vals and add values to timeList
+        self.Graph.plot(self.timeVal, self.GroupAvg[-1] / dataTime, 
+                        pen = None, symbol = 'o')
+        self._timeList.append(self.timeVal)
+        
+        #write new data to file ###############################################
+        
+        self.Update()
+        print(self.GroupAvg)
             
     def Update(self):
         self.TimeVL.setText(str(self.timeVal))
