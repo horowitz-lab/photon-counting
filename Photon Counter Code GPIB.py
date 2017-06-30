@@ -9,6 +9,7 @@ Created on Fri Jun 23 14:23:25 2017
 #--------------------------------Library Imports------------------------------#
 
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QTimer
 import numpy as np
 import sys
 import sr400_GUI
@@ -33,8 +34,12 @@ sr400.timeout = 1000
 
 class MainApp(sr400_GUI.Ui_Form):
 
-    timeVal = 0
+    TimeValList = [0]
+    CountsList = [0]
+    CountRateList = [0]
+    
     TotalAvg = 0
+    Samples = 0
     StDev = 0
     StErr = 0
     
@@ -42,9 +47,12 @@ class MainApp(sr400_GUI.Ui_Form):
     GroupAvg = []
     StopFlag = 0
     
+    StartTime = 0
     DWELL = 2e-3
     
+    
     #Counter parameters controlled by GUI
+    TimeInt = 3
     NPERIODS = 0
     TSET = 0
     NPERInst = ''
@@ -63,35 +71,36 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
         
+        self.graphTimer = QTimer()
+        self.graphTimer.setSingleShot(False)
+        self.graphTimer.timeout.connect(self.Update)
+        
 #------------------------GUI-GPIB Connection Functions------------------------#
 
     def DataDump(self):
         """asks the sr400 for data and reads and returns what is sent"""
-        #sr400.write('ea \r')
-        #data = sr400.read(1000)
+        print("In data dump... \n")
         data = sr400.query("ea \r")
-        print(data)
+        print("Data: ", data)
         return data
         
-    def BytesToList(self, BStr):
+    def BytesToInt(self, BStr):
         """converts a bytestring to a list of ints"""
-        dList = []
         curVal = 0
         #Iterate through bytes to add numbers to dList
         for b in BStr:
             #Ends a # if a carriage return is reached
             if b == 13:
-                dList.append(curVal)
                 curVal = 0
             #Otherwise, multiply curVal by 10 & ad the next #.
             #ASCII - 48 is the numerical value.
             else:
                 curVal = curVal * 10 + b - 48
-        return dList
+        return 0
     
     def TSETtoInt(self, text):
         """converts a string of the form NUMeNUM to an int"""
-        return int(text[0]) * 10 ** int(text[2:])
+        return int(text[0]) * 10 ** int(text[2:]) / (1e7)
     
 #--------------------------GUI Widget Functions-------------------------------#
             
@@ -101,7 +110,6 @@ class MainApp(sr400_GUI.Ui_Form):
         NPERInst = 'np' + str(NPERIODS)
         print(NPERInst)
         sr400.write(NPERInst)
-        
         
     def TSET_fxn(self):
         TSETText = self.TSETBox.toPlainText()
@@ -124,55 +132,54 @@ class MainApp(sr400_GUI.Ui_Form):
         self.GroupTally = 0
         """
         sr400.write('cr')
-        #self.StartBtn.setEnabled(True)
+        self.StartBtn.setEnabled(True)
+        self.graphTimer.stop()
     
     def Start_fxn(self):
         self.StopBtn.setEnabled(True)
         print('Start Button works!')
-        sr400.write('cs')
-        time.sleep(6)
-        
-        Data = self.DataDump()
-        print(Data)
-        
-        DataList = self.BytesToList(data)
-        print("\nData: \n")
-        print(DataList)
-        
-        
-        """
+        sr400.write('cr; cs')
         self.StartBtn.setEnabled(False)
-        #ser.write(self.enc(self.TSET_fxn() + ' \r'))
-        sr400.write(self.TSET_fxn() + str(self.DWELL) + '; cr; cs')
-        while self.StopFlag == 0:
-            time.sleep(6)
-            data = self.DataDump()
-            dataList = self.BytesToList(data)
-            self.GroupTally += 1
-            
-            groupTime = self.NPERIODS * (self.TSET + self.DWELL)
-            self.timeVal = self.GroupTally * groupTime
-            self.GroupAvg.append(np.mean(dataList))
-            self.TotalAvg = np.mean(self.GroupAvg)
-            self.StDev = np.std(self.GroupAvg)
-            self.StErr = self.StDev / np.sqrt(self.GroupTally)
-            
-            #graph newest vals and add values to timeList
-            self.Graph.plot(self.timeVal, self.GroupAvg[-1] / groupTime, 
-                            pen = None, symbol = 'o')
-            self._timeList.append(self.timeVal)
-            
-            
-            self.Update()
-            print(self.GroupAvg)
-            
+        
+        print("Where?")
+        
+        self.StartTime = time.clock()
+        loopTime = time.clock()
+        
+        print("Current Time: ", loopTime)
+        
+        self.graphTimer.start(self.TimeInt * 1000)
+        
     def Update(self):
-        self.TimeVL.setText(str(self.timeVal))
-        self.PhotonVL.setText(str(self.GroupAvg[self.GroupTally])) ########################################
+        
+        #Most recent photon count
+        data = sr400.query("xa \r")
+        print("Current Count: ", type(data))
+        
+        print(self.CountsList[-1])
+        self.CountsList.append(int(data))
+        print("Added to CountsList!\n")
+        print(self.CountsList)
+        
+        self.TimeValList.append(time.clock() - self.StartTime)
+        self.CountRateList.append(self.CountsList[-1] / self.TimeValList[-1])
+        
+        self.Samples += 1
+        self.TotalAvg = np.mean(self.CountsList)
+        self.StDev = np.std(self.CountsList)
+        self.StErr = self.StDev / np.sqrt(self.Samples)
+        
+        print("Starting to graph...")
+        
+        self.Graph.plot(self.TimeValList[1:], self.CountsList[1:],
+                        pen = None, symbol = 'o')
+        
+        self.TimeVL.setText(str(self.TimeValList[-1]))
+        self.PhotonVL.setText(str(self.CountsList[-1]))
         self.TotAvgVL.setText(str(self.TotalAvg))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
-"""
+
 def main():
     app = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QWidget()
