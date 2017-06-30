@@ -22,18 +22,20 @@ ser = serial.Serial(comPort, timeout = 0.5)
 
 class MainApp(sr400_GUI.Ui_Form):
     #-------------------Establishing Variables--------------------------------#
-    timeVal = 0
+    timeValsList = [0]
+    countsList = [0]
+    countRateList = [0]
     TotalAvg = 0
+    numSamples = 0
     StDev = 0
     StErr = 0
     
-    GroupTally = 0
-    GroupAvg = []
     StopFlag = 0
     
     DWELL = 2e-3
     
     #Counter parameters controlled by GUI
+    timeInterval = 3
     NPERIODS = 0
     TSET = 0
     NPERInst = ''
@@ -67,28 +69,28 @@ class MainApp(sr400_GUI.Ui_Form):
     def DataDump(self):
         """asks the sr400 for data and reads and returns what is sent"""
         print("in data dump")
-        ser.write(self.enc('ea \r'))        
+        ser.write(self.enc('xa \r'))        
         data = ser.read(1000)
         
         print("data", data)
         
         return data
         
-    def BytesToList(self, BStr):
-        """converts a bytestring to a list of ints"""
-        dList = []
+    def BytesToInt(self, BStr):
+        """converts a bytestring to an ints"""
         curVal = 0
-        #Iterate through bytes to add numbers to dList
-        for b in BStr:
-            #Ends a # if a carriage return is reached
-            if b == 13:
-                dList.append(curVal)
-                curVal = 0
-            #Otherwise, multiply curVal by 10 & ad the next #.
+        #Iterate through bytes to convert the number
+        for byte in BStr:
+            #returns the number at carriage return
+            if byte == 13:
+                return curVal
+            #Otherwise, multiply curVal by 10 & add the next #.
             #ASCII - 48 is the numerical value.
             else:
-                curVal = curVal * 10 + b - 48
-        return dList
+                curVal = curVal * 10 + byte - 48
+        
+        print("failed for some reason")
+        return 0
     
     def TSETtoInt(self, text):
         """converts a string of the form NUMeNUM to an int of seconds"""
@@ -138,55 +140,62 @@ class MainApp(sr400_GUI.Ui_Form):
         
         self.StartBtn.setEnabled(False)
         #ser.write(self.enc(self.TSET_fxn() + ' \r'))
-        ser.write(self.enc(self.TSET_fxn() + 'cr; FA \r'))
+        ser.write(self.enc(self.TSET_fxn() + 'cr; cs \r'))
         
         print("where")
         
         #get the current time, variable of how long to wait for data
-        curTime = time.clock()
-        dataTime = self.NPERIODS * (self.TSET + self.DWELL)
+        startTime = time.clock()
+        loopTime = time.clock()
         
+        print("curTime" , loopTime)
         
-        print("curTime" , curTime)
-        print("dataTime" , dataTime)
-        
-        while (time.clock() - curTime) < dataTime:
-            #query for other button
-            a=1
-            a+=1
-        
-        print("even more")
-        
-        #get new data, store it
-        data = self.DataDump()
-        
-        print("data dump???")
-        
-        dataList = self.BytesToList(data)
-        print(dataList)
-        
-        self.GroupTally += 1
-        self.timeVal = self.GroupTally * dataTime
-        self.GroupAvg.append(np.mean(dataList))
-        self.TotalAvg = np.mean(self.GroupAvg)
-        self.StDev = np.std(self.GroupAvg)
-        self.StErr = self.StDev / np.sqrt(self.GroupTally)
-        
-        #graph newest vals and add values to 
-        print("starting to graph")
-        
-        self.Graph.plot([self.timeVal], [self.GroupAvg[-1] / dataTime], 
-                        pen = None, symbol = 'o')
-        self._timeList.append(self.timeVal)
-        
-        #write new data to file ###############################################
-        
-        self.Update()
-        print(self.GroupAvg)
-            
+        while 1:
+            #if not yet at next interval
+            if (time.clock() - loopTime) < self.timeInterval: 
+                #query for other button
+                a=1
+                a+=1
+                
+            #take new data
+            else:
+                #get the current count value and store the additional counts
+                ser.write(self.enc("xa \r"))
+                curCount = self.BytesToInt(ser.read(15)) #12 is arbitrary
+                
+                print("curCount", curCount)
+                
+                self.countsList.append(curCount - self.countsList[-1])
+                print(self.countsList[-1])
+                print(self.countsList)
+                
+                #get elapsed time and add it to time list, add to rate list
+                self.timeValsList.append(time.clock() - startTime)
+                self.countRateList.append(self.countsList[-1] / 
+                                          self.timeValsList[-1])
+                
+                #increment numSamples, calculate average, st dev and st error
+                self.numSamples += 1
+                self.TotalAvg = np.mean(self.countsList)
+                self.StDev = np.std(self.countsList)
+                self.StErr = self.StDev / np.sqrt(self.numSamples)
+                
+                #graph newest vals, ignore the first (0,0) pair
+                print("starting to graph")
+                
+                self.Graph.plot(self.timeValsList[1:], self.countRateList[1:], 
+                                pen = None, symbol = 'o')
+                time.sleep(0.01)                
+                #write new data to file ###############################################
+                
+                
+                #reset current time as loopTime to prepare for next iteration
+                loopTime = time.clock()
+                self.Update()
+                
     def Update(self):
-        self.TimeVL.setText(str(self.timeVal))
-        self.PhotonVL.setText(str(self.GroupAvg[-1])) ########################################
+        self.TimeVL.setText(str(self.timeValsList[-1]))
+        self.PhotonVL.setText(str(self.countsList[-1])) ########################################
         self.TotAvgVL.setText(str(self.TotalAvg))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
