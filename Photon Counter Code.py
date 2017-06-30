@@ -9,6 +9,7 @@ Created on Fri Jun 23 14:23:25 2017
 #--------------------------------Library Imports------------------------------#
 
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QTimer
 import numpy as np
 import sys
 import sr400_GUI
@@ -31,7 +32,7 @@ class MainApp(sr400_GUI.Ui_Form):
     StErr = 0
     
     StopFlag = 0
-    
+    startTime = 0
     DWELL = 2e-3
     
     #Counter parameters controlled by GUI
@@ -57,7 +58,9 @@ class MainApp(sr400_GUI.Ui_Form):
         
         #create a new file and properly name it #####################################
         
-        
+        self.graphTimer = QTimer()
+        self.graphTimer.setSingleShot(False)
+        self.graphTimer.timeout.connect(self.Update)
         
         
 #----------------------GUI-Serial Connection Functions------------------------#
@@ -132,6 +135,9 @@ class MainApp(sr400_GUI.Ui_Form):
         self.GroupTally = 0
         ser.write(self.enc('cr \r'))
         self.StartBtn.setEnabled(True)
+        
+        #stop the timer
+        self.graphTimer.stop()
     
     def Start_fxn(self):
         """sends sr400 commands to set count parameters and gets data"""
@@ -145,55 +151,45 @@ class MainApp(sr400_GUI.Ui_Form):
         print("where")
         
         #get the current time, variable of how long to wait for data
-        startTime = time.clock()
+        self.startTime = time.clock()
         loopTime = time.clock()
         
         print("curTime" , loopTime)
         
-        while 1:
-            #if not yet at next interval
-            if (time.clock() - loopTime) < self.timeInterval: 
-                #query for other button
-                a=1
-                a+=1
-                
-            #take new data
-            else:
-                #get the current count value and store the additional counts
-                ser.write(self.enc("xa \r"))
-                curCount = self.BytesToInt(ser.read(15)) #12 is arbitrary
-                
-                print("curCount", curCount)
-                
-                self.countsList.append(curCount - self.countsList[-1])
-                print(self.countsList[-1])
-                print(self.countsList)
-                
-                #get elapsed time and add it to time list, add to rate list
-                self.timeValsList.append(time.clock() - startTime)
-                self.countRateList.append(self.countsList[-1] / 
-                                          self.timeValsList[-1])
-                
-                #increment numSamples, calculate average, st dev and st error
-                self.numSamples += 1
-                self.TotalAvg = np.mean(self.countsList)
-                self.StDev = np.std(self.countsList)
-                self.StErr = self.StDev / np.sqrt(self.numSamples)
-                
-                #graph newest vals, ignore the first (0,0) pair
-                print("starting to graph")
-                
-                self.Graph.plot(self.timeValsList[1:], self.countRateList[1:], 
-                                pen = None, symbol = 'o')
-                time.sleep(0.01)                
-                #write new data to file ###############################################
-                
-                
-                #reset current time as loopTime to prepare for next iteration
-                loopTime = time.clock()
-                self.Update()
+        
+        self.graphTimer.start(self.timeInterval * 1000)
                 
     def Update(self):
+        #get the current count value and store the additional counts
+        ser.write(self.enc("xa \r"))
+        curCount = self.BytesToInt(ser.read(15)) #12 is arbitrary
+        
+        print("curCount", curCount)
+        
+        print(self.countsList[-1])
+        self.countsList.append(curCount) #- self.countsList[-1])
+        print(self.countsList)
+        
+        #get elapsed time and add it to time list, add to rate list
+        self.timeValsList.append(time.clock() - self.startTime)
+        self.countRateList.append(self.countsList[-1] / 
+                                  self.timeValsList[-1])
+        
+        #increment numSamples, calculate average, st dev and st error
+        self.numSamples += 1
+        self.TotalAvg = np.mean(self.countsList)
+        self.StDev = np.std(self.countsList)
+        self.StErr = self.StDev / np.sqrt(self.numSamples)
+        
+        #graph newest vals, ignore the first (0,0) pair
+        print("starting to graph")
+        
+        self.Graph.plot(self.timeValsList[1:], self.countsList[1:], #self.countRateList[1:], 
+                        pen = None, symbol = 'o')                
+        #write new data to file ###############################################
+        
+        
+        #update gui boxes        
         self.TimeVL.setText(str(self.timeValsList[-1]))
         self.PhotonVL.setText(str(self.countsList[-1])) ########################################
         self.TotAvgVL.setText(str(self.TotalAvg))
