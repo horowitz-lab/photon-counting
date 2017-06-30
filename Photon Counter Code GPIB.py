@@ -15,7 +15,7 @@ import sr400_GUI
 import visa
 import time
 
-#############com port##################################
+#--------------------------Setting Up GPIB Connectivity-----------------------#
 
 rm = visa.ResourceManager()
 instList = rm.list_resources()
@@ -27,9 +27,12 @@ for instr in instList:
         GPIBName = instr
 
 sr400 = rm.open_resource(GPIBName)
+sr400.timeout = 1000
+
+#----------------------------Establishing Variables---------------------------#
 
 class MainApp(sr400_GUI.Ui_Form):
-    #-------------------Establishing Variables--------------------------------#
+
     timeVal = 0
     TotalAvg = 0
     StDev = 0
@@ -53,20 +56,21 @@ class MainApp(sr400_GUI.Ui_Form):
         super(self.__class__, self).__init__(parent)
         print('Check 2')
         
+        sr400.write('DT ' + (str(self.DWELL)) + '; ' + 'cp2, 1e7')
+        
         #button connections to functions
         self.NPERSlider.valueChanged.connect(self.NPERSet)
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
+        
 #------------------------GUI-GPIB Connection Functions------------------------#
 
-    def enc(self, str):
-        """returns the ascii version of strings"""
-        return str.encode('ascii')
-        
     def DataDump(self):
         """asks the sr400 for data and reads and returns what is sent"""
-        sr400.write(self.enc('ea \r'))
-        data = sr400.read(1000)
+        #sr400.write('ea \r')
+        #data = sr400.read(1000)
+        data = sr400.query("ea \r")
+        print(data)
         return data
         
     def BytesToList(self, BStr):
@@ -88,6 +92,7 @@ class MainApp(sr400_GUI.Ui_Form):
     def TSETtoInt(self, text):
         """converts a string of the form NUMeNUM to an int"""
         return int(text[0]) * 10 ** int(text[2:])
+    
 #--------------------------GUI Widget Functions-------------------------------#
             
     def NPERSet(self):
@@ -125,6 +130,16 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StopBtn.setEnabled(True)
         print('Start Button works!')
         sr400.write('cs')
+        time.sleep(6)
+        
+        Data = self.DataDump()
+        print(Data)
+        
+        DataList = self.BytesToList(data)
+        print("\nData: \n")
+        print(DataList)
+        
+        
         """
         self.StartBtn.setEnabled(False)
         #ser.write(self.enc(self.TSET_fxn() + ' \r'))
