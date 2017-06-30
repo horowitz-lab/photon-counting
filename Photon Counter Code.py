@@ -16,9 +16,9 @@ import serial
 import time
 
 ############# com port ##################################
-comPort = 'COM5'
+comPort = 'COM7'
 print('Check 1')
-ser = serial.Serial(comPort)
+ser = serial.Serial(comPort, timeout = 0.5)
 
 class MainApp(sr400_GUI.Ui_Form):
     #-------------------Establishing Variables--------------------------------#
@@ -66,8 +66,12 @@ class MainApp(sr400_GUI.Ui_Form):
         
     def DataDump(self):
         """asks the sr400 for data and reads and returns what is sent"""
-        ser.write(self.enc('ea \r'))
+        print("in data dump")
+        ser.write(self.enc('ea \r'))        
         data = ser.read(1000)
+        
+        print("data", data)
+        
         return data
         
     def BytesToList(self, BStr):
@@ -87,15 +91,15 @@ class MainApp(sr400_GUI.Ui_Form):
         return dList
     
     def TSETtoInt(self, text):
-        """converts a string of the form NUMeNUM to an int"""
-        return int(text[0]) * 10 ** int(text[2:])
+        """converts a string of the form NUMeNUM to an int of seconds"""
+        return int(text[0]) * 10 ** int(text[2:]) / (1e7)
 #--------------------------GUI Widget Functions-------------------------------#
             
     def NPERSet(self):
         """sets the number of data counts per time bin using the slider"""
         print('Slider works!')
-        NPERIODS = self.NPERSlider.value()
-        NPERInst = 'np' + str(NPERIODS) + ' \r'
+        self.NPERIODS = self.NPERSlider.value()
+        NPERInst = 'np' + str(self.NPERIODS) + ' \r'
         print(NPERInst)
         ser.write(self.enc(NPERInst))
         
@@ -134,20 +138,32 @@ class MainApp(sr400_GUI.Ui_Form):
         
         self.StartBtn.setEnabled(False)
         #ser.write(self.enc(self.TSET_fxn() + ' \r'))
-        ser.write(self.enc(self.TSET_fxn() + 'cr; cs \r'))
+        ser.write(self.enc(self.TSET_fxn() + 'cr; FA \r'))
+        
+        print("where")
         
         #get the current time, variable of how long to wait for data
         curTime = time.clock()
         dataTime = self.NPERIODS * (self.TSET + self.DWELL)
         
-        while time.clock() - curTime < dataTime:
+        
+        print("curTime" , curTime)
+        print("dataTime" , dataTime)
+        
+        while (time.clock() - curTime) < dataTime:
             #query for other button
-            a = 1
-            
+            a=1
+            a+=1
+        
+        print("even more")
+        
         #get new data, store it
         data = self.DataDump()
-        dataList = self.BytesToList(data)
         
+        print("data dump???")
+        
+        dataList = self.BytesToList(data)
+        print(dataList)
         
         self.GroupTally += 1
         self.timeVal = self.GroupTally * dataTime
@@ -156,8 +172,10 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StDev = np.std(self.GroupAvg)
         self.StErr = self.StDev / np.sqrt(self.GroupTally)
         
-        #graph newest vals and add values to timeList
-        self.Graph.plot(self.timeVal, self.GroupAvg[-1] / dataTime, 
+        #graph newest vals and add values to 
+        print("starting to graph")
+        
+        self.Graph.plot([self.timeVal], [self.GroupAvg[-1] / dataTime], 
                         pen = None, symbol = 'o')
         self._timeList.append(self.timeVal)
         
@@ -168,7 +186,7 @@ class MainApp(sr400_GUI.Ui_Form):
             
     def Update(self):
         self.TimeVL.setText(str(self.timeVal))
-        self.PhotonVL.setText(str(self.GroupAvg[self.GroupTally])) ########################################
+        self.PhotonVL.setText(str(self.GroupAvg[-1])) ########################################
         self.TotAvgVL.setText(str(self.TotalAvg))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
