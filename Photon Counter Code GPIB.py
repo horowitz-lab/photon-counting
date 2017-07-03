@@ -60,7 +60,8 @@ class MainApp(sr400_GUI.Ui_Form):
         super(self.__class__, self).__init__(parent)
         print('Check 2')
         
-        sr400.write('DT ' + (str(self.DWELL)) + '; ' + 'cp2, 1e7')
+        #setup SR400 to do 1 super long count
+        sr400.write('cp2, 9e11')
         
         #button connections to functions
         self.NPERSlider.valueChanged.connect(self.NPERSet)
@@ -148,22 +149,19 @@ class MainApp(sr400_GUI.Ui_Form):
         """gets current count and updates instance variables"""
         #get and append most recent count time data
         data = sr400.query("xa \r")
-        curTime = time.clock()
-        self.TimeValList.append(curTime - self.startTime)
+        self.TimeValList.append(self.TimeValList[-1] + self.TimeInt)
         self.CountsList.append(int(data))
         
-
-        #some touble shoot
-        print("Current Count: ", type(data))
-        print(self.CountsList[-1])
         
-        
-        print("Added to CountsList!\n")
+        print("counts and time list")
         print(self.CountsList)
         
+        
         #add new countrate
-        self.CountRateList.append(self.CountsList[-1] / 
-                                  self.TimeValList[-1] - self.TimeValList[-2])
+        self.CountRateList.append((self.CountsList[-1] - self.CountsList[-2])/ 
+                                  (self.TimeValList[-1] - self.TimeValList[-2]))
+        print(self.CountRateList, '\n')
+        
         
         self.Samples += 1
         self.TotalAvg = np.mean(self.CountsList)
@@ -172,11 +170,11 @@ class MainApp(sr400_GUI.Ui_Form):
         
         print("Starting to graph...")
         
-        self.Graph.plot(self.TimeValList[1:], self.CountsList[1:],
+        self.Graph.plot([self.TimeValList[-1]], [self.CountsList[-1]],
                         pen = None, symbol = 'o')
         
         self.TimeVL.setText(str(self.TimeValList[-1]))
-        self.PhotonVL.setText(str(self.CountsList[-1]))
+        self.PhotonVL.setText(str(self.CountsList[-1] - self.CountsList[-2]))
         self.TotAvgVL.setText(str(self.TotalAvg))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
