@@ -8,9 +8,9 @@ Created on Mon Jul  3 09:41:09 2017
 
 #----------------Before Collection (When Start is pressed)--------------------#
 
-#So within Start_fxn BEFORE self.graphTimer.start
+#Called by Start_fxn BEFORE self.graphTimer.start
 
-Header = "Time (s)\t\tTotal Counts\t\tRate (counts/s)\n\n"
+Header = "Time (s),Total Counts,Rate (counts/s)\n\n"
 Handle = ""
 
 def MakeTemp(tempDir):
@@ -49,9 +49,9 @@ if not(os.path.exists(saveDir)):
 
 #----------------------------During Collection--------------------------------#
 
-#So within Update()
-DataString = (str(TimeValList[-1]) + "\t\t" +
-              str(CountsList[-1]) + "\t\t" +
+#Called by Update()
+DataString = (str(TimeValList[-1]) + "," +
+              str(CountsList[-1]) + "," +
               str(CountsList[-1]/TimeValList[-1]) + "\n")
 temp.write(DataString)
 print("\nSuccessfully added new data!\n")
@@ -59,7 +59,7 @@ print(temp.read())
 
 #-----------------------------After Collection--------------------------------#
 
-#So within Stop_fxn
+#Called by Stop_fxn
 
 #Filename format (in folder "Data"): Data\yymmddCOUNT# NV#.txt
 temp.close()
@@ -77,6 +77,6 @@ if (input("\nType y to save file, anything else \
         FileName = DateS + "COUNT" + Handle
     else if RunCount >= 1:
         FileName = DateS + "COUNT" + Handle + "_" + RunCount
-    saveDir = os.path.join(saveDir, FileName + ".txt")
+    saveDir = os.path.join(saveDir, FileName + ".csv")
 
 """
