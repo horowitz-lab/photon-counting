@@ -4,6 +4,7 @@ Fuming Qiu
 save to directory program
 """
 
+#os is for file-controlling commands
 import os
 import datetime
 counter = 1
@@ -24,21 +25,34 @@ def saveData(path):
 
 #auto date entry
 date = datetime.date.today().isoformat()
-folders = ["data", date]
-temp = ["temp", date]
+
+#Each of these variables is a folder name.
+save = ["data_", date]
+temp = ["temp_", date]
 
 """
 #relative path option: will most likely use absolute path option
 #saveDir = os.getcwd()
 """
+
+#These obtain the current directory.
 saveDir = os.getcwd()
 tempDir = os.getcwd()
 #saveDir = "C:\\Users\\HorowitzLab\\Documents"
 
 #make new directory if not exist
+
+#os.path.join makes your new folder with a specific location 
+#(e.g. C:\\Place1\\Place2, etc.)
+
+saveDir = os.path.join(saveDir, save)
+tempDir = os.path.join(tempDir, temp)
+
+"""
 for folder in folders:
     saveDir = os.path.join(saveDir, folder)
     tempDir = os.path.join(tempDir, folder)
+"""
 if not(os.path.exists(saveDir)):
     os.makedirs(saveDir)
 
@@ -46,6 +60,9 @@ fileName = input("filename?: ")
 saveDir = os.path.join(saveDir, fileName + ".txt")
 
 #if file already exists, let user know and then create new filename
+
+#.isfile is a logical corresponding whether your path (from join) ENDS in a 
+#path.
 while os.path.isfile(saveDir):
     print("heuhaefu that's already a file o.o")
     print("adding _new to the end of file name")
@@ -60,4 +77,5 @@ print(open(saveDir).read())
 if not(input("type y to save file, anything else \
               to delete: ").lower() == "y"):
     os.remove(saveDir)
-    
+ 
+    #

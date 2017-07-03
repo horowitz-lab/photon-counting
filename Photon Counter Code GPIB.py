@@ -16,6 +16,9 @@ import sr400_GUI
 import visa
 import time
 
+import os
+import datetime
+
 #--------------------------Setting Up GPIB Connectivity-----------------------#
 
 rm = visa.ResourceManager()
@@ -29,6 +32,28 @@ for instr in instList:
 
 sr400 = rm.open_resource(GPIBName)
 sr400.timeout = 1000
+
+#--------------------------Data File Functionality----------------------------#
+
+"""
+This creates a filename in the format yyyy-mm-dd\function\count\description.txt
+where \ is used to denote separate sections that are not space-separated.
+"""
+Date = datetime.date.today().isoformat()
+RunCount = 0
+
+def CreateFile(Date, RunCount):
+    if RunCount == 0:
+        return Date
+    else if RunCount >= 1:
+        return Date + "_" + str(RunCount)
+
+Folders = ["Data", Date]
+Temp = ["Temporary", Date]
+
+mainDir = os.getcwd()
+tempDir = os.getcwd()
+    
 
 #----------------------------Establishing Variables---------------------------#
 
