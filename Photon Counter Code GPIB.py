@@ -36,7 +36,7 @@ class MainApp(sr400_GUI.Ui_Form):
     #lists and variables
     TimeValList = [0]
     CountsList = [0]
-    CountRateList = [0]
+    CountRateList = []
     
     TotalAvg = 0
     Samples = 0
@@ -170,8 +170,12 @@ class MainApp(sr400_GUI.Ui_Form):
         
         print("Starting to graph...")
         
-        self.Graph.plot([self.TimeValList[-1]], [self.CountsList[-1]],
-                        pen = None, symbol = 'o')
+        #graph counts vs time and count rate vs time: ignore first rate point
+        self.cvtGraph.plot(self.TimeValList, self.CountsList,
+                           pen = (1, 1), symbol = 'o')
+        if len(self.CountRateList) > 1:
+            self.rvtGraph.plot(self.TimeValList[2:], self.CountRateList[1:],
+                               pen = (1, 1), symbol = 'o')
         
         self.TimeVL.setText(str(self.TimeValList[-1]))
         self.PhotonVL.setText(str(self.CountsList[-1] - self.CountsList[-2]))
