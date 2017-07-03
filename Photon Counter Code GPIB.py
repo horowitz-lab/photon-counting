@@ -34,27 +34,108 @@ sr400 = rm.open_resource(GPIBName)
 sr400.timeout = 1000
 
 #--------------------------Data File Functionality----------------------------#
+                          
+                           #__Defining Variables__#
 
-"""
-This creates a filename in the format yyyy-mm-dd\function\count\description.txt
-where \ is used to denote separate sections that are not space-separated.
-"""
-Date = datetime.date.today().isoformat()
-RunCount = 0
+#This line formats the categories of the data for a text file.
+Header = "Time (s)\t\tTotal Counts\t\tRate (counts/s)\n\n"
 
-def CreateFile(Date, RunCount):
-    if RunCount == 0:
-        return Date
-    else if RunCount >= 1:
-        return Date + "_" + str(RunCount)
+Handle = ""         #Stores a name to use for saved files from current session
+FileName = ""       #For the SAVED data file
+RunCount = 0        #Tallies number of measurement periods in current session
 
-Folders = ["Data", Date]
-Temp = ["Temporary", Date]
+temp = None
+#L = long, S = short
+DateL = datetime.date.today().isoformat()
+DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]
 
-mainDir = os.getcwd()
-tempDir = os.getcwd()
+#MAC PATH NAME
+GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
+
+#WINDOWS PATH NAME
+GitHub = "C:\\Users"
+
+#These functions occur in Start_fxn before self.graphTimer.start.
+#TESTED
+
+def tempCreate():
     
+    #These lines properly index data files in preparation for saving, and simi-
+    #lar processes will be used later.
+    if os.getcwd() != GitHub:
+        os.chdir(GitHub)
+    if RunCount == 0:
+        tempFileName = DateS + "_Temp"
+    else if RunCount >= 1:
+        tempFileName = DateS + "_Temp" + "_" + RunCount
+    temp = open(tempFileName, "w+")
+    temp.write(Header)
+    temp.close()
 
+#Gets current directory (photon-counting in GitHub)
+#TESTED
+
+def dirSetup():
+    temp = tempCreate()
+
+    #Creates new folders
+    saveDir = DateL+"Save_Data"
+    if not(os.path.exists(saveDir)):
+        os.makedirs(saveDir)
+    os.chdir("Save_Data")
+
+#This function occurs within Update().
+
+def AddData(time, count, file):
+    DataString = (str(time) + "\t\t" +
+                  str(count) + "\t\t" +
+                  str(count / time) + "\n")
+    file.write(DataString)
+    print("\nSuccessfully added new data!\n")
+    print(file.read())  #FT
+
+
+#This function occurs within Stop_fxn.
+
+def FileSave(fileItem):              #fileItem being the temporary file
+    read_op = open(fileItem, "r")
+    
+    #readlines() is used rather than read() because it will read the entirety
+    #of the file if no parameter is given to it, whereas read() would just read
+    #the file starting at the end of the last operation on it (right after the
+    #last character was written to it).
+    FullData = fileItem.readlines()  
+    fileItem.close()
+    RunCount += 1
+    print("Here is your file: \n\n")
+    print(FullData)
+    
+    if not (input("\nType y to save file, anything else \
+                  to delete: ").lower() == "y"):
+        os.remove(saveDir)
+    else:
+        if RunCount == 0:
+            #So the first of these conditions will always be true when no data
+            #files have been created by this program during its last usage, and
+            #the second is a check for duplicate filenames that HAVE already 
+            #been created.
+            while Handle == "" or os.path.isfile(saveDir):
+                Handle = input("\nEnter a name for your data files: ")
+                if os.path.isfile(saveDir):
+                    print("\nThat file name is already in use.")
+            FileName = DateS + "COUNT" + Handle + ".txt"
+        else if RunCount >= 1:
+            #i.e. if files using this session's handle have already been
+            #created, new files will index properly using that handle.
+            FileName = DateS + "COUNT" + Handle + "_" + str(RunCount) + ".txt"
+            
+        #These lines copy all the data into what will be the permanently saved
+        #data file.
+        saveDir = os.path.join(saveDir, FileName)
+        savedFile = open(FileName, "w+")
+        savedFile.write(FullData)
+        savedFile.close()
+    
 #----------------------------Establishing Variables---------------------------#
 
 class MainApp(sr400_GUI.Ui_Form):
@@ -74,7 +155,6 @@ class MainApp(sr400_GUI.Ui_Form):
     
     StartTime = 0
     DWELL = 2e-3
-    
     
     #Counter parameters controlled by GUI
     TimeInt = 3
@@ -159,6 +239,8 @@ class MainApp(sr400_GUI.Ui_Form):
         sr400.write('cr')
         self.StartBtn.setEnabled(True)
         self.graphTimer.stop()
+        
+        FileSave(temp)
     
     def Start_fxn(self):
         self.StopBtn.setEnabled(True)
@@ -173,6 +255,7 @@ class MainApp(sr400_GUI.Ui_Form):
         
         print("Current Time: ", loopTime)
         
+        dirSetup()
         self.graphTimer.start(self.TimeInt * 1000)
         
     def Update(self):
@@ -199,11 +282,16 @@ class MainApp(sr400_GUI.Ui_Form):
         self.Graph.plot(self.TimeValList[1:], self.CountsList[1:],
                         pen = None, symbol = 'o')
         
-        self.TimeVL.setText(str(self.TimeValList[-1]))
-        self.PhotonVL.setText(str(self.CountsList[-1]))
+        currentTime = TimeValList[-1]
+        currentCount = CountsList[-1]
+        
+        self.TimeVL.setText(str(self.currentTime))
+        self.PhotonVL.setText(str(self.currentCount))
         self.TotAvgVL.setText(str(self.TotalAvg))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
+        
+        AddData(currentTime, currentCount, temp)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
