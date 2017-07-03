@@ -67,10 +67,8 @@ RunCount += 1
 print("Here is your file: \n")
 print(open(tempDir).read())
 
-if not (input("\nType y to save file, anything else \
-              to delete: ").lower() == "y"):
-    os.remove(saveDir)
-else:
+if (input("\nType y to save file, anything else \
+              to leave: ").lower() == "y"):
     if RunCount == 0:       
         while os.path.isfile(saveDir) or Handle == "":
             Handle = input("\nEnter a name for your data files: ")
