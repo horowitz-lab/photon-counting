@@ -187,13 +187,17 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.splitter, 2, 5, 1, 1)
         
         #counts and time graph
-        self.cvtGraph = PlotWidget(Form)
-        self.cvtGraph.setObjectName("Graph")
+        self.cvtGraph = PlotWidget(Form, title = "counts v Time", labels = 
+                                   {"left" : "Counts", 
+                                    "bottom" : "Time (seconds)"})
+        self.cvtGraph.setObjectName("cvtGraph")
         self.gridLayout.addWidget(self.cvtGraph, 3, 0, 1, 3)
         
         #countrate graph
-        self.rvtGraph = PlotWidget(Form)
-        self.rvtGraph.setObjectName("Graph")
+        self.rvtGraph = PlotWidget(Form, title = "Rate v Time", labels = 
+                                   {"left" : "Rate (Counts/Second)", 
+                                    "bottom" : "Time (seconds)"})
+        self.rvtGraph.setObjectName("rvtGraph")
         self.gridLayout.addWidget(self.rvtGraph, 3, 4, 1, 3)
         
         self.retranslateUi(Form)
