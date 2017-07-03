@@ -8,6 +8,23 @@ Created on Mon Jul  3 16:12:06 2017
 
 import os
 
+a = os.getcwd()
+print(a)
+testfile = open("TestFile.txt", "w+")
+testfile.write("This is a test. A what? A test.")
+testfile.close()
+
+os.mkdir("TestDir")
+os.chdir("TestDir")
+b = os.getcwd()
+print(b)
+
+
+GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
+os.chdir(GitHub)
+os.remove("TestFile.txt")
+
+"""
 #Directory Creation and Change Test
 a = os.getcwd()
 print(a)
@@ -39,3 +56,4 @@ op_2 = open("Text.txt", "r")
 a = op_2.readlines()
 print(a)
 op_2.close()
+"""

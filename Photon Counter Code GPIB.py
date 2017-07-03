@@ -79,10 +79,10 @@ def dirSetup():
     temp = tempCreate()
 
     #Creates new folders
-    saveDir = DateL+"Save_Data"
+    saveDir = DateL+"_SavedData"
     if not(os.path.exists(saveDir)):
         os.makedirs(saveDir)
-    os.chdir("Save_Data")
+    os.chdir(saveDir)
 
 #This function occurs within Update().
 
@@ -135,6 +135,11 @@ def FileSave(fileItem):              #fileItem being the temporary file
         savedFile = open(FileName, "w+")
         savedFile.write(FullData)
         savedFile.close()
+        
+        #Done to ensure temp can be properly accessed and deleted now that it
+        #isn't necessary anymore.
+        os.chdir(GitHub)
+        os.remove(temp)
     
 #----------------------------Establishing Variables---------------------------#
 
