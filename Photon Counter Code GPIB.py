@@ -33,7 +33,7 @@ sr400.timeout = 1000
 #----------------------------Establishing Variables---------------------------#
 
 class MainApp(sr400_GUI.Ui_Form):
-
+    #lists and variables
     TimeValList = [0]
     CountsList = [0]
     CountRateList = [0]
@@ -42,11 +42,7 @@ class MainApp(sr400_GUI.Ui_Form):
     Samples = 0
     StDev = 0
     StErr = 0
-    
-    GroupTally = 0
-    GroupAvg = []
-    StopFlag = 0
-    
+        
     StartTime = 0
     DWELL = 2e-3
     
@@ -136,33 +132,38 @@ class MainApp(sr400_GUI.Ui_Form):
         self.graphTimer.stop()
     
     def Start_fxn(self):
+        """starts the data collection and sets a reference time"""
+        #enable/disable buttons
         self.StopBtn.setEnabled(True)
-        print('Start Button works!')
-        sr400.write('cr; cs')
         self.StartBtn.setEnabled(False)
         
-        print("Where?")
+        #start the counter and get the reference time
+        sr400.write('cr; cs')
+        self.startTime = time.clock()
         
-        self.StartTime = time.clock()
-        loopTime = time.clock()
-        
-        print("Current Time: ", loopTime)
-        
+        #starts the QTimer to start repeatedly emit its signal
         self.graphTimer.start(self.TimeInt * 1000)
         
     def Update(self):
-        
-        #Most recent photon count
+        """gets current count and updates instance variables"""
+        #get and append most recent count time data
         data = sr400.query("xa \r")
-        print("Current Count: ", type(data))
-        
-        print(self.CountsList[-1])
+        curTime = time.clock()
+        self.TimeValList.append(curTime - self.startTime)
         self.CountsList.append(int(data))
+        
+
+        #some touble shoot
+        print("Current Count: ", type(data))
+        print(self.CountsList[-1])
+        
+        
         print("Added to CountsList!\n")
         print(self.CountsList)
         
-        self.TimeValList.append(time.clock() - self.StartTime)
-        self.CountRateList.append(self.CountsList[-1] / self.TimeValList[-1])
+        #add new countrate
+        self.CountRateList.append(self.CountsList[-1] / 
+                                  self.TimeValList[-1] - self.TimeValList[-2])
         
         self.Samples += 1
         self.TotalAvg = np.mean(self.CountsList)
