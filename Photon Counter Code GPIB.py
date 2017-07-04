@@ -42,104 +42,120 @@ Header = "Time (s)\t\tTotal Counts\t\tRate (counts/s)\n\n"
 
 Handle = ""         #Stores a name to use for saved files from current session
 FileName = ""       #For the SAVED data file
-RunCount = 0        #Tallies number of measurement periods in current session
 
-temp = None
 #L = long, S = short
-DateL = datetime.date.today().isoformat()
-DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]
+DateL = datetime.date.today().isoformat()      # = yyyy-mm-dd
+DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]   # = y[2:3]mmdd
 
-#MAC PATH NAME
+TimeL = str(datetime.datetime.now().time())
+TimeS = TimeL[0:8]
+
+saveDir = DateL + "_" + TimeS + "_SavedData"  #The directory FileName goes in
+os.makedirs(saveDir)
+os.chdir(saveDir)
+
+print(os.getcwd())
+tempFileName = "TempData.txt"
+temp = open(tempFileName, "w+")
+temp.write(Header)
+
 GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
 
-#WINDOWS PATH NAME
-GitHub = "C:\\Users"
+"""
+#The following two lines assign the variable GitHub different pathnames
+#formatted in either the Mac or Windows style. I am not sure how to code in
+#detection of what OS the computer running the program is using, so for now
+#before you run the program you MUST open this file and un-comment the correct
+#pathname for your OS.
 
-#These functions occur in Start_fxn before self.graphTimer.start.
+currentPath = os.getcwd()
+if os.getcwd()
+
+#Mac
+GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
+
+#Windows
+#GitHub = "C:\\Users"
+"""
+
+#This occurs in Start_fxn before self.graphTimer.start.
 #TESTED
 
-def tempCreate():
+"""
+def Setup(RunCount):
+    
+    RunCount += 1
+    print("Run #", RunCount)
     
     #These lines properly index data files in preparation for saving, and simi-
     #lar processes will be used later.
-    if os.getcwd() != GitHub:
+    currentPath = os.getcwd()
+    GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
+
+    if currentPath[0] == "/":
+        GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
+    elif currentPath[0] == "C":
+        GitHub = "C:\\Users
+    if currentPath != GitHub:
         os.chdir(GitHub)
-    if RunCount == 0:
-        tempFileName = DateS + "_Temp"
-    else if RunCount >= 1:
-        tempFileName = DateS + "_Temp" + "_" + RunCount
-    temp = open(tempFileName, "w+")
+        
+    #temp = open(tempFileName, "w+")
     temp.write(Header)
-    temp.close()
-
-#Gets current directory (photon-counting in GitHub)
-#TESTED
-
-def dirSetup():
-    temp = tempCreate()
-
-    #Creates new folders
-    saveDir = DateL+"_SavedData"
+    #temp.close()
     if not(os.path.exists(saveDir)):
         os.makedirs(saveDir)
     os.chdir(saveDir)
+    print(os.getcwd())
+"""
 
 #This function occurs within Update().
-
-def AddData(time, count, file):
+def AddData(time, count):
     DataString = (str(time) + "\t\t" +
                   str(count) + "\t\t" +
                   str(count / time) + "\n")
-    file.write(DataString)
+    #file = open(tempFileName, "w+")
+    temp.write(DataString)
     print("\nSuccessfully added new data!\n")
-    print(file.read())  #FT
+    print(temp.readlines())  #FT
+    #file.close()
 
+#This function occurs within Stop_fxn().
 
-#This function occurs within Stop_fxn.
-
-def FileSave(fileItem):              #fileItem being the temporary file
-    read_op = open(fileItem, "r")
+def FileSave(RunCount):             
+    #read_op = open(tempFileName, "r")
     
     #readlines() is used rather than read() because it will read the entirety
     #of the file if no parameter is given to it, whereas read() would just read
     #the file starting at the end of the last operation on it (right after the
     #last character was written to it).
-    FullData = fileItem.readlines()  
-    fileItem.close()
-    RunCount += 1
+                                                               
+    #FullData = read_op.readlines()
+    temp.close()
     print("Here is your file: \n\n")
-    print(FullData)
-    
-    if not (input("\nType y to save file, anything else \
-                  to delete: ").lower() == "y"):
-        os.remove(saveDir)
-    else:
-        if RunCount == 0:
-            #So the first of these conditions will always be true when no data
-            #files have been created by this program during its last usage, and
-            #the second is a check for duplicate filenames that HAVE already 
-            #been created.
-            while Handle == "" or os.path.isfile(saveDir):
-                Handle = input("\nEnter a name for your data files: ")
-                if os.path.isfile(saveDir):
-                    print("\nThat file name is already in use.")
-            FileName = DateS + "COUNT" + Handle + ".txt"
-        else if RunCount >= 1:
-            #i.e. if files using this session's handle have already been
-            #created, new files will index properly using that handle.
-            FileName = DateS + "COUNT" + Handle + "_" + str(RunCount) + ".txt"
-            
+    print(open(tempFileName).read())
+    Handle = ""
+    if RunCount == 1:
+        #So the first of these conditions will always be true when no data
+        #files have been created by this program during its last usage, and
+        #the second is a check for duplicate filenames that HAVE already 
+        #been created.
+        Handle = input("\nEnter an identifier for your data files: ")
+        FileName = DateS + "_" + TimeS + "_COUNT_" + Handle + ".txt"
+    elif RunCount >= 2:
+        #i.e. if files using this session's handle have already been
+        #created, new files will index properly using that handle.
+        FileName = (DateS + "_" + TimeS + "_COUNT_" + Handle + 
+                    "_" + RunCount + ".txt")  
         #These lines copy all the data into what will be the permanently saved
         #data file.
-        saveDir = os.path.join(saveDir, FileName)
         savedFile = open(FileName, "w+")
-        savedFile.write(FullData)
+        for line in FullData:
+            savedFile.write(line)
         savedFile.close()
         
-        #Done to ensure temp can be properly accessed and deleted now that it
-        #isn't necessary anymore.
-        os.chdir(GitHub)
-        os.remove(temp)
+    #Done to ensure temp can be properly accessed and deleted now that it
+    #isn't necessary anymore.
+    print("\nYour file has been successfully saved!")
     
 #----------------------------Establishing Variables---------------------------#
 
@@ -161,11 +177,16 @@ class MainApp(sr400_GUI.Ui_Form):
     StartTime = 0
     DWELL = 2e-3
     
+    RunCount = 0      #Tallies number of measurement periods in current session
+    
     #Counter parameters controlled by GUI
     TimeInt = 3
     NPERIODS = 0
     TSET = 0
     NPERInst = ''
+    
+    currentTime = 0
+    currentCount = 0
     
     Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     Exponents = ["0",] + Bases + ["10", "11"]
@@ -209,7 +230,7 @@ class MainApp(sr400_GUI.Ui_Form):
         return 0
     
     def TSETtoInt(self, text):
-        """converts a string of the form NUMeNUM to an int"""
+        #converts a string of the form NUMeNUM to an int
         return int(text[0]) * 10 ** int(text[2:]) / (1e7)
     
 #--------------------------GUI Widget Functions-------------------------------#
@@ -235,17 +256,11 @@ class MainApp(sr400_GUI.Ui_Form):
         return TSETInst
         
     def Stop_fxn(self):
-        """
-        self.StopBtn.setEnabled(False)
-        print('Stop Button works!')
-        self.StopFlag = 1
-        self.GroupTally = 0
-        """
         sr400.write('cr')
         self.StartBtn.setEnabled(True)
         self.graphTimer.stop()
         
-        FileSave(temp)
+        FileSave(self.RunCount)
     
     def Start_fxn(self):
         self.StopBtn.setEnabled(True)
@@ -260,15 +275,15 @@ class MainApp(sr400_GUI.Ui_Form):
         
         print("Current Time: ", loopTime)
         
-        dirSetup()
+        self.RunCount += 1
+        print("Run #", self.RunCount)
+        
         self.graphTimer.start(self.TimeInt * 1000)
         
     def Update(self):
         
         #Most recent photon count
         data = sr400.query("xa \r")
-        print("Current Count: ", type(data))
-        
         print(self.CountsList[-1])
         self.CountsList.append(int(data))
         print("Added to CountsList!\n")
@@ -287,8 +302,8 @@ class MainApp(sr400_GUI.Ui_Form):
         self.Graph.plot(self.TimeValList[1:], self.CountsList[1:],
                         pen = None, symbol = 'o')
         
-        currentTime = TimeValList[-1]
-        currentCount = CountsList[-1]
+        currentTime = self.TimeValList[-1]
+        currentCount = self.CountsList[-1]
         
         self.TimeVL.setText(str(self.currentTime))
         self.PhotonVL.setText(str(self.currentCount))
@@ -296,7 +311,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
         
-        AddData(currentTime, currentCount, temp)
+        AddData(currentTime, currentCount)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
