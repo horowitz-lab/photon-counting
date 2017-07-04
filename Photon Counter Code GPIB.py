@@ -38,7 +38,7 @@ sr400.timeout = 1000
                            #__Defining Variables__#
 
 #This line formats the categories of the data for a text file.
-Header = "Time (s)\t\tTotal Counts\t\tRate (counts/s)\n\n"
+Header = "Time (s),Total Counts,Rate (counts/s)\n\n"
 
 Handle = ""         #Stores a name to use for saved files from current session
 FileName = ""       #For the SAVED data file
@@ -54,64 +54,10 @@ saveDir = DateL + "_" + TimeS + "_SavedData"  #The directory FileName goes in
 os.makedirs(saveDir)
 os.chdir(saveDir)
 
-print(os.getcwd())
-tempFileName = "TempData.txt"
-temp = open(tempFileName, "w+")
-temp.write(Header)
-
-GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
-
-"""
-#The following two lines assign the variable GitHub different pathnames
-#formatted in either the Mac or Windows style. I am not sure how to code in
-#detection of what OS the computer running the program is using, so for now
-#before you run the program you MUST open this file and un-comment the correct
-#pathname for your OS.
-
-currentPath = os.getcwd()
-if os.getcwd()
-
-#Mac
-GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
-
-#Windows
-#GitHub = "C:\\Users"
-"""
-
-#This occurs in Start_fxn before self.graphTimer.start.
-#TESTED
-
-"""
-def Setup(RunCount):
-    
-    RunCount += 1
-    print("Run #", RunCount)
-    
-    #These lines properly index data files in preparation for saving, and simi-
-    #lar processes will be used later.
-    currentPath = os.getcwd()
-    GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
-
-    if currentPath[0] == "/":
-        GitHub = "/Users/pguest/Documents/GitHub/photon-counting"
-    elif currentPath[0] == "C":
-        GitHub = "C:\\Users
-    if currentPath != GitHub:
-        os.chdir(GitHub)
-        
-    #temp = open(tempFileName, "w+")
-    temp.write(Header)
-    #temp.close()
-    if not(os.path.exists(saveDir)):
-        os.makedirs(saveDir)
-    os.chdir(saveDir)
-    print(os.getcwd())
-"""
-
-#This function occurs within Update().
+#This function is called by Update().
 def AddData(time, count):
-    DataString = (str(time) + "\t\t" +
-                  str(count) + "\t\t" +
+    DataString = (str(time) + "," +
+                  str(count) + "," +
                   str(count / time) + "\n")
     #file = open(tempFileName, "w+")
     temp.write(DataString)
@@ -119,7 +65,7 @@ def AddData(time, count):
     print(temp.readlines())  #FT
     #file.close()
 
-#This function occurs within Stop_fxn().
+#This function is called by Stop_fxn().
 
 def FileSave(RunCount):             
     #read_op = open(tempFileName, "r")
@@ -133,26 +79,7 @@ def FileSave(RunCount):
     temp.close()
     print("Here is your file: \n\n")
     print(open(tempFileName).read())
-    Handle = ""
-    if RunCount == 1:
-        #So the first of these conditions will always be true when no data
-        #files have been created by this program during its last usage, and
-        #the second is a check for duplicate filenames that HAVE already 
-        #been created.
-        Handle = input("\nEnter an identifier for your data files: ")
-        FileName = DateS + "_" + TimeS + "_COUNT_" + Handle + ".txt"
-    elif RunCount >= 2:
-        #i.e. if files using this session's handle have already been
-        #created, new files will index properly using that handle.
-        FileName = (DateS + "_" + TimeS + "_COUNT_" + Handle + 
-                    "_" + RunCount + ".txt")  
-        #These lines copy all the data into what will be the permanently saved
-        #data file.
-        savedFile = open(FileName, "w+")
-        for line in FullData:
-            savedFile.write(line)
-        savedFile.close()
-        
+    
     #Done to ensure temp can be properly accessed and deleted now that it
     #isn't necessary anymore.
     print("\nYour file has been successfully saved!")
@@ -275,11 +202,21 @@ class MainApp(sr400_GUI.Ui_Form):
         
         print("Current Time: ", loopTime)
         
-        self.RunCount += 1
-        print("Run #", self.RunCount)
+        self.FileSetup()
         
         self.graphTimer.start(self.TimeInt * 1000)
         
+    def FileSetup(self):
+        TimeL = str(datetime.datetime.now().time())
+        TimeS = TimeL[0:8]
+        self.RunCount += 1
+        print("Run #", self.RunCount)
+        global tempFileName 
+        tempFileName = (DateS + "_Data_" + TimeS + ".csv")
+        global temp 
+        temp = open(tempFileName, "w+")
+        temp.write(Header)
+    
     def Update(self):
         
         #Most recent photon count
