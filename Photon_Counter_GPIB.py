@@ -35,6 +35,9 @@ sr400.timeout = 1000
 #--------------------------Data File Functionality----------------------------#
                           
                            #__Defining Variables__#
+global temp
+
+
 
 #This line formats the categories of the data for a text file.
 Header = "Time (s),Total Counts,Rate (counts/s)\n\n"
@@ -197,6 +200,8 @@ class MainApp(sr400_GUI.Ui_Form):
         sr400.write('cr; cs')
         self.startTime = time.clock()
         
+        self.FileSetup()
+        
         #starts the QTimer to start repeatedly emit its signal
         self.graphTimer.start(self.TimeInt * 1000)
     
@@ -207,7 +212,7 @@ class MainApp(sr400_GUI.Ui_Form):
         print("Run #", self.RunCount)
         global tempFileName 
         tempFileName = (DateS + "_Data_" + TimeS + ".csv")
-        global temp 
+        global temp
         temp = open(tempFileName, "w+")
         temp.write(Header)
     
