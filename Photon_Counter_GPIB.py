@@ -100,6 +100,8 @@ class MainApp(sr400_GUI.Ui_Form):
     StErr = 0
     
     RunCount = 0      #Tallies number of measurement periods in current session
+    NPER = 2000     #the number of periods
+    curBin = 0;
     
     #Counter parameters controlled by GUI
     TimeInt = 3
@@ -115,8 +117,8 @@ class MainApp(sr400_GUI.Ui_Form):
         super(self.__class__, self).__init__(parent)
         print('Check 2')
         
-        #setup SR400 to do 1 super long count
-        sr400.write('cp2, 9e11')
+        #setup SR400 to do nperiods = 2000
+        sr400.write('np 2000')
         
         #button connections to functions
         self.StartBtn.clicked.connect(self.Start_fxn)
@@ -125,38 +127,37 @@ class MainApp(sr400_GUI.Ui_Form):
         self.graphTimer = QTimer()
         self.graphTimer.setSingleShot(False)
         self.graphTimer.timeout.connect(self.Update)
-        
-#------------------------GUI-GPIB Connection Functions------------------------#
 
-    def DataDump(self):
-        """asks the sr400 for data and reads and returns what is sent"""
-        print("In data dump... \n")
-        data = sr400.query("ea \r")
-        print("Data: ", data)
-        return data
-        
-    def BytesToInt(self, BStr):
-        """converts a bytestring to a list of ints"""
-        curVal = 0
-        #Iterate through bytes to add numbers to dList
-        for b in BStr:
-            #Ends a # if a carriage return is reached
-            if b == 13:
-                curVal = 0
-            #Otherwise, multiply curVal by 10 & ad the next #.
-            #ASCII - 48 is the numerical value.
-            else:
-                curVal = curVal * 10 + b - 48
-        return 0
+#--------------Formatting Functions-------------------------------------------#
+    def TSETtoFloat(self, text):
+        #converts a string of the form NUMeNUM to an float
+        return float(text[0]) * 10 ** int(text[2:]) / (1e7)
+    
     
 #--------------------------GUI Widget Functions-------------------------------#
     def TSET_fxn(self):
+        """gets the time value from the textbox and sets it as the sr400 time
+           and sets an instance variable to hold that value"""
+           
+        #get value and assert it's in correct form
         TSETText = self.TSETBox.toPlainText()
         print(TSETText)
         print(type(TSETText))
 
-        self.TimeInt = float(TSETText)
+        assert TSETText[0] in self.Bases, "Base must be a \
+            non-zero number!"
+        assert TSETText[1] == "e", "Second character must be e for \
+            base-exponent notation!"
+        assert TSETText[2] in self.Exponents, "Exponent must range \
+            from 0 to 11!"
+
+        #convert string to proper float
+        self.TimeInt = self.TSETtoFloat(TSETText)
         print(self.TimeInt)
+        print(type(self.TimeInt))
+        
+        #set the sr400 to that time period
+        sr400.write('cp2, ' + TSETText)
         
     def Stop_fxn(self):
         """
@@ -171,7 +172,7 @@ class MainApp(sr400_GUI.Ui_Form):
         FileSave(self.RunCount)
         
     def Start_fxn(self):
-        """starts the data collection and sets a reference time"""
+        """starts the data collection"""
         #reset data variables
         self.TimeValList = [0]
         self.CountsList = [0]
@@ -187,15 +188,14 @@ class MainApp(sr400_GUI.Ui_Form):
         
         #start the counter and get the reference time
         sr400.write('cr; cs')
-        self.startTime = time.clock()
         
         self.FileSetup()
         
         #sets the time interval through tset
         self.TSET_fxn()
         
-        #starts the QTimer to start repeatedly emit its signal
-        self.graphTimer.start(self.TimeInt * 1000)
+        #starts the QTimer at timeInt + 2ms dwell time
+        self.graphTimer.start(self.TimeInt * 1000 + 2)
     
     def FileSetup(self):
         TimeL = str(datetime.datetime.now().time())
@@ -237,8 +237,8 @@ class MainApp(sr400_GUI.Ui_Form):
         print("Starting to graph...")
         
         #graph counts vs time and count rate vs time: ignore first rate point
-        #self.cvtGraph.plot(self.TimeValList[-2:], self.CountsList[-2:],
-        #                   pen = (1, 1), symbol = 'o')
+        self.cvtGraph.plot(self.TimeValList[-2:], self.CountsList[-2:],
+                           pen = (1, 1), symbol = 'o')
         if len(self.CountRateList) > 2:
             self.rvtGraph.plot(self.TimeValList[-2:], self.CountRateList[-2:],
                                pen = (1, 1), symbol = 'o')
