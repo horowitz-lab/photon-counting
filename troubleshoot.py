@@ -7,7 +7,6 @@ Created on Wed Jul  5 14:13:50 2017
 """
 
 import visa
-import time
 import os
 
 
@@ -17,8 +16,8 @@ import os
 
 fileName = "continuous_polling_0.2_s_intervals" + ".csv"
 waitTime = 405
-NPERIODS = 1000
-TSET = "9e11;"
+NPERIODS = 1
+TSET = "1e7;"
 
 
 
@@ -49,21 +48,11 @@ file = open(fileName, "w+")
 sr400.write("cr")
 sr400.write("np " + str(NPERIODS))
 sr400.write("CP 2, " + TSET)
-sr400.write("cs")
 
 
+data = sr400.query("FA")
 
-#get the data
-
-data = []
-
-for i in range(1, NPERIODS):
-    time.sleep(0.2)
-    data.append(sr400.query("XA"))
-    print(data[-1])
-    
-for item in data:
-    file.write(str(data) + ",")
+print("already gone")
 
 file.close()
 

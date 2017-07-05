@@ -110,5 +110,8 @@ ENV/
 #excel stuff
 *.csv
 
+#more excel
+*.xls
+
 #text stuff
 *.txt
