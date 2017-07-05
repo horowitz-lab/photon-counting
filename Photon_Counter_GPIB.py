@@ -189,7 +189,18 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.setEnabled(True)
         self.graphTimer.stop()
         FileSave(self.RunCount)
-    
+        
+        #reset data variables
+        self.TimeValList = [0]
+        self.CountsList = [0]
+        self.CountRateList = []
+        
+        #clear graphs
+        self.cvtGraph.clear()
+        self.rvtGraph.clear()
+        
+        
+        
     def Start_fxn(self):
         """starts the data collection and sets a reference time"""
         #enable/disable buttons
