@@ -106,3 +106,9 @@ ENV/
 
 #data
 2017-*
+
+#excel stuff
+*.csv
+
+#text stuff
+*.txt

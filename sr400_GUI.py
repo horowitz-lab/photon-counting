@@ -27,35 +27,7 @@ class Ui_Form(object):
         Form.resize(824, 630)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
-        self.NPERLabel = QtWidgets.QLabel(Form)
-        self.NPERLabel.setMinimumSize(QtCore.QSize(101, 27))
-        self.NPERLabel.setMaximumSize(QtCore.QSize(101, 27))
-        font = QtGui.QFont()
-        font.setPointSize(18)
-        font.setBold(False)
-        font.setWeight(50)
-        self.NPERLabel.setFont(font)
-        self.NPERLabel.setObjectName("NPERLabel")
-        self.gridLayout.addWidget(self.NPERLabel, 0, 0, 1, 1)
-        self.NPERSlider = QtWidgets.QSlider(Form)
-        self.NPERSlider.setMinimumSize(QtCore.QSize(621, 27))
-        self.NPERSlider.setMaximumSize(QtCore.QSize(621, 27))
-        self.NPERSlider.setMinimum(1)
-        self.NPERSlider.setMaximum(2000)
-        self.NPERSlider.setProperty("value", 1)
-        self.NPERSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.NPERSlider.setTickPosition(QtWidgets.QSlider.TicksAbove)
-        self.NPERSlider.setTickInterval(100)
-        self.NPERSlider.setObjectName("NPERSlider")
-        self.gridLayout.addWidget(self.NPERSlider, 0, 1, 1, 5)
-        self.NPERVL = QtWidgets.QLabel(Form)
-        self.NPERVL.setMinimumSize(QtCore.QSize(61, 25))
-        self.NPERVL.setMaximumSize(QtCore.QSize(61, 25))
-        font = QtGui.QFont()
-        font.setPointSize(21)
-        self.NPERVL.setFont(font)
-        self.NPERVL.setObjectName("NPERVL")
-        self.gridLayout.addWidget(self.NPERVL, 0, 6, 1, 1)
+        
         self.TSETLabel = QtWidgets.QLabel(Form)
         self.TSETLabel.setMinimumSize(QtCore.QSize(0, 31))
         font = QtGui.QFont()
@@ -65,11 +37,13 @@ class Ui_Form(object):
         self.TSETLabel.setFont(font)
         self.TSETLabel.setObjectName("TSETLabel")
         self.gridLayout.addWidget(self.TSETLabel, 1, 0, 1, 3)
+        
         self.TSETBox = QtWidgets.QTextEdit(Form)
         self.TSETBox.setMinimumSize(QtCore.QSize(71, 31))
         self.TSETBox.setMaximumSize(QtCore.QSize(71, 31))
         self.TSETBox.setObjectName("TSETBox")
         self.gridLayout.addWidget(self.TSETBox, 1, 3, 1, 1)
+        
         self.PhotonForm = QtWidgets.QSplitter(Form)
         self.PhotonForm.setMinimumSize(QtCore.QSize(131, 31))
         self.PhotonForm.setOrientation(QtCore.Qt.Horizontal)
@@ -191,17 +165,16 @@ class Ui_Form(object):
                                    {"left" : "Counts", 
                                     "bottom" : "Time (seconds)"})
         self.cvtGraph.setObjectName("cvtGraph")
-        self.gridLayout.addWidget(self.cvtGraph, 3, 0, 1, 3)
+        self.gridLayout.addWidget(self.cvtGraph, 3, 0, 1, 2)
         
         #countrate graph
         self.rvtGraph = PlotWidget(Form, title = "Rate v Time", labels = 
                                    {"left" : "Rate (Counts/Second)", 
                                     "bottom" : "Time (seconds)"})
         self.rvtGraph.setObjectName("rvtGraph")
-        self.gridLayout.addWidget(self.rvtGraph, 3, 4, 1, 3)
+        self.gridLayout.addWidget(self.rvtGraph, 3, 3, 1, 4)
         
         self.retranslateUi(Form)
-        self.NPERSlider.valueChanged['int'].connect(self.NPERVL.setNum)
         QtCore.QMetaObject.connectSlotsByName(Form)
         
         
@@ -214,14 +187,12 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
-        self.NPERLabel.setText(_translate("Form", "# of Bins"))
-        self.NPERVL.setText(_translate("Form", "0"))
-        self.TSETLabel.setText(_translate("Form", "Duration of Time Bins (s)"))
+        self.TSETLabel.setText(_translate("Form", "Set Time Interval (s)"))
         self.TSETBox.setHtml(_translate("Form", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">9e11</span></p></body></html>"))
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">1.0</span></p></body></html>"))
         self.PhotonLabel.setText(_translate("Form", "Photons"))
         self.PhotonVL.setText(_translate("Form", "0"))
         self.TotAvgLabel.setText(_translate("Form", "Total Average"))

@@ -103,9 +103,7 @@ class MainApp(sr400_GUI.Ui_Form):
     
     #Counter parameters controlled by GUI
     TimeInt = 3
-    NPERIODS = 0
     TSET = 0
-    NPERInst = ''
     
     Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     Exponents = ["0",] + Bases + ["10", "11"]
@@ -121,7 +119,6 @@ class MainApp(sr400_GUI.Ui_Form):
         sr400.write('cp2, 9e11')
         
         #button connections to functions
-        self.NPERSlider.valueChanged.connect(self.NPERSet)
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
         
@@ -152,31 +149,14 @@ class MainApp(sr400_GUI.Ui_Form):
                 curVal = curVal * 10 + b - 48
         return 0
     
-    def TSETtoInt(self, text):
-        """converts a string of the form NUMeNUM to an int"""
-        return int(text[0]) * 10 ** int(text[2:]) / (1e7)
-    
 #--------------------------GUI Widget Functions-------------------------------#
-            
-    def NPERSet(self):
-        print('Slider works!')
-        NPERIODS = self.NPERSlider.value()
-        NPERInst = 'np' + str(NPERIODS)
-        print(NPERInst)
-        sr400.write(NPERInst)
-        
     def TSET_fxn(self):
         TSETText = self.TSETBox.toPlainText()
         print(TSETText)
-        assert TSETText[0] in self.Bases, "Base must be a \
-            non-zero number!"
-        assert TSETText[1] == "e", "Second character must be e for \
-            base-exponent notation!"
-        assert TSETText[2] in self.Exponents, "Exponent must range \
-            from 0 to 11!"
-        self.TSET = self.TSETtoInt(TSETText)
-        TSETInst = 'cp2, ' + TSETText
-        return TSETInst
+        print(type(TSETText))
+
+        self.TimeInt = float(TSETText)
+        print(self.TimeInt)
         
     def Stop_fxn(self):
         """
@@ -190,6 +170,8 @@ class MainApp(sr400_GUI.Ui_Form):
         self.graphTimer.stop()
         FileSave(self.RunCount)
         
+    def Start_fxn(self):
+        """starts the data collection and sets a reference time"""
         #reset data variables
         self.TimeValList = [0]
         self.CountsList = [0]
@@ -199,10 +181,6 @@ class MainApp(sr400_GUI.Ui_Form):
         self.cvtGraph.clear()
         self.rvtGraph.clear()
         
-        
-        
-    def Start_fxn(self):
-        """starts the data collection and sets a reference time"""
         #enable/disable buttons
         self.StopBtn.setEnabled(True)
         self.StartBtn.setEnabled(False)
@@ -212,6 +190,9 @@ class MainApp(sr400_GUI.Ui_Form):
         self.startTime = time.clock()
         
         self.FileSetup()
+        
+        #sets the time interval through tset
+        self.TSET_fxn()
         
         #starts the QTimer to start repeatedly emit its signal
         self.graphTimer.start(self.TimeInt * 1000)
@@ -256,10 +237,10 @@ class MainApp(sr400_GUI.Ui_Form):
         print("Starting to graph...")
         
         #graph counts vs time and count rate vs time: ignore first rate point
-        self.cvtGraph.plot(self.TimeValList, self.CountsList,
-                           pen = (1, 1), symbol = 'o')
-        if len(self.CountRateList) > 1:
-            self.rvtGraph.plot(self.TimeValList[2:], self.CountRateList[1:],
+        #self.cvtGraph.plot(self.TimeValList[-2:], self.CountsList[-2:],
+        #                   pen = (1, 1), symbol = 'o')
+        if len(self.CountRateList) > 2:
+            self.rvtGraph.plot(self.TimeValList[-2:], self.CountRateList[-2:],
                                pen = (1, 1), symbol = 'o')
         
 
