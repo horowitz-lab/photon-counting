@@ -15,6 +15,8 @@ import sys
 import sr400_GUI
 import visa
 import time
+import datetime
+import os
 
 #--------------------------Setting Up GPIB Connectivity-----------------------#
 
@@ -30,26 +32,71 @@ for instr in instList:
 sr400 = rm.open_resource(GPIBName)
 sr400.timeout = 1000
 
+#--------------------------Data File Functionality----------------------------#
+                          
+                           #__Defining Variables__#
+
+#This line formats the categories of the data for a text file.
+Header = "Time (s),Total Counts,Rate (counts/s)\n\n"
+
+Handle = ""         #Stores a name to use for saved files from current session
+FileName = ""       #For the SAVED data file
+
+#L = long, S = short
+DateL = datetime.date.today().isoformat()      # = yyyy-mm-dd
+DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]   # = y[2:3]mmdd
+
+TimeL = str(datetime.datetime.now().time())
+TimeS = TimeL[0:8]
+
+saveDir = DateL + "_" + TimeS + "_SavedData"  #The directory FileName goes in
+os.makedirs(saveDir)
+os.chdir(saveDir)
+
+#This function is called by Update().
+def AddData(time, count, rate):
+    DataString = (str(time) + "," +
+                  str(count) + "," +
+                  str(rate) + "\n")
+    #file = open(tempFileName, "w+")
+    temp.write(DataString)
+    print("\nSuccessfully added new data!\n")
+    print(temp.readlines())  #FT
+    #file.close()
+
+#This function is called by Stop_fxn().
+
+def FileSave(RunCount):             
+    #read_op = open(tempFileName, "r")
+    
+    #readlines() is used rather than read() because it will read the entirety
+    #of the file if no parameter is given to it, whereas read() would just read
+    #the file starting at the end of the last operation on it (right after the
+    #last character was written to it).
+                                                               
+    #FullData = read_op.readlines()
+    temp.close()
+    print("Here is your file: \n\n")
+    print(open(tempFileName).read())
+    
+    #Done to ensure temp can be properly accessed and deleted now that it
+    #isn't necessary anymore.
+    print("\nYour file has been successfully saved!")
+
 #----------------------------Establishing Variables---------------------------#
 
 class MainApp(sr400_GUI.Ui_Form):
-
+    #lists and variables
     TimeValList = [0]
     CountsList = [0]
-    CountRateList = [0]
+    CountRateList = []
     
     TotalAvg = 0
     Samples = 0
     StDev = 0
     StErr = 0
     
-    GroupTally = 0
-    GroupAvg = []
-    StopFlag = 0
-    
-    StartTime = 0
-    DWELL = 2e-3
-    
+    RunCount = 0      #Tallies number of measurement periods in current session
     
     #Counter parameters controlled by GUI
     TimeInt = 3
@@ -60,11 +107,15 @@ class MainApp(sr400_GUI.Ui_Form):
     Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     Exponents = ["0",] + Bases + ["10", "11"]
     
+    currentTime = 0
+    currentCount = 0
+    
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
         print('Check 2')
         
-        sr400.write('DT ' + (str(self.DWELL)) + '; ' + 'cp2, 1e7')
+        #setup SR400 to do 1 super long count
+        sr400.write('cp2, 9e11')
         
         #button connections to functions
         self.NPERSlider.valueChanged.connect(self.NPERSet)
@@ -134,35 +185,52 @@ class MainApp(sr400_GUI.Ui_Form):
         sr400.write('cr')
         self.StartBtn.setEnabled(True)
         self.graphTimer.stop()
+        FileSave(self.RunCount)
     
     def Start_fxn(self):
+        """starts the data collection and sets a reference time"""
+        #enable/disable buttons
         self.StopBtn.setEnabled(True)
-        print('Start Button works!')
-        sr400.write('cr; cs')
         self.StartBtn.setEnabled(False)
         
-        print("Where?")
+        #start the counter and get the reference time
+        sr400.write('cr; cs')
+        self.startTime = time.clock()
         
-        self.StartTime = time.clock()
-        loopTime = time.clock()
-        
-        print("Current Time: ", loopTime)
-        
+        #starts the QTimer to start repeatedly emit its signal
         self.graphTimer.start(self.TimeInt * 1000)
-        
+    
+    def FileSetup(self):
+        TimeL = str(datetime.datetime.now().time())
+        TimeS = TimeL[0:8]
+        self.RunCount += 1
+        print("Run #", self.RunCount)
+        global tempFileName 
+        tempFileName = (DateS + "_Data_" + TimeS + ".csv")
+        global temp 
+        temp = open(tempFileName, "w+")
+        temp.write(Header)
+    
     def Update(self):
-        
-        #Most recent photon count
+        """gets current count and updates instance variables"""
+        #get and append most recent count, time data
         data = sr400.query("xa \r")
-        print("Current Count: ", type(data))
+        currentTime = self.TimeValList[-1] + self.TimeInt
+        currentCount = int(data)
         
-        print(self.CountsList[-1])
-        self.CountsList.append(int(data))
-        print("Added to CountsList!\n")
+        self.TimeValList.append(currentTime)
+        self.CountsList.append(currentCount)
+        
+        
+        print("counts and time list")
         print(self.CountsList)
         
-        self.TimeValList.append(time.clock() - self.StartTime)
-        self.CountRateList.append(self.CountsList[-1] / self.TimeValList[-1])
+        
+        #add new countrate
+        self.CountRateList.append((self.CountsList[-1] - self.CountsList[-2])/ 
+                                  (self.TimeValList[-1] - self.TimeValList[-2]))
+        print(self.CountRateList, '\n')
+        
         
         self.Samples += 1
         self.TotalAvg = np.mean(self.CountsList)
@@ -171,14 +239,22 @@ class MainApp(sr400_GUI.Ui_Form):
         
         print("Starting to graph...")
         
-        self.Graph.plot(self.TimeValList[1:], self.CountsList[1:],
-                        pen = None, symbol = 'o')
+        #graph counts vs time and count rate vs time: ignore first rate point
+        self.cvtGraph.plot(self.TimeValList, self.CountsList,
+                           pen = (1, 1), symbol = 'o')
+        if len(self.CountRateList) > 1:
+            self.rvtGraph.plot(self.TimeValList[2:], self.CountRateList[1:],
+                               pen = (1, 1), symbol = 'o')
+        
+
         
         self.TimeVL.setText(str(self.TimeValList[-1]))
-        self.PhotonVL.setText(str(self.CountsList[-1]))
+        self.PhotonVL.setText(str(self.CountsList[-1] - self.CountsList[-2]))
         self.TotAvgVL.setText(str(self.TotalAvg))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
+        
+        AddData(currentTime, currentCount, self.CountRateList[-1])
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

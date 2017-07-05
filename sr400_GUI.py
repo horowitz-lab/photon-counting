@@ -185,9 +185,21 @@ class Ui_Form(object):
         self.StErrVL.setFont(font)
         self.StErrVL.setObjectName("StErrVL")
         self.gridLayout.addWidget(self.splitter, 2, 5, 1, 1)
-        self.Graph = PlotWidget(Form)
-        self.Graph.setObjectName("Graph")
-        self.gridLayout.addWidget(self.Graph, 3, 0, 1, 7)
+        
+        #counts and time graph
+        self.cvtGraph = PlotWidget(Form, title = "counts v Time", labels = 
+                                   {"left" : "Counts", 
+                                    "bottom" : "Time (seconds)"})
+        self.cvtGraph.setObjectName("cvtGraph")
+        self.gridLayout.addWidget(self.cvtGraph, 3, 0, 1, 3)
+        
+        #countrate graph
+        self.rvtGraph = PlotWidget(Form, title = "Rate v Time", labels = 
+                                   {"left" : "Rate (Counts/Second)", 
+                                    "bottom" : "Time (seconds)"})
+        self.rvtGraph.setObjectName("rvtGraph")
+        self.gridLayout.addWidget(self.rvtGraph, 3, 4, 1, 3)
+        
         self.retranslateUi(Form)
         self.NPERSlider.valueChanged['int'].connect(self.NPERVL.setNum)
         QtCore.QMetaObject.connectSlotsByName(Form)
