@@ -49,7 +49,7 @@ FileName = ""       #For the SAVED data file
 DateL = datetime.date.today().isoformat()      # = yyyy-mm-dd
 DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]   # = y[2:3]mmdd
 
-TimeL = str(datetime.datetime.now().time())
+TimeL = str(datetime.datetime.now().time())         ###################
 TimeS = TimeL[0:8]
 
 saveDir = DateL + "_" + TimeS + "_SavedData"  #The directory FileName goes in
@@ -57,8 +57,8 @@ os.makedirs(saveDir)
 os.chdir(saveDir)
 
 #This function is called by Update().
-def AddData(time, count, rate):
-    DataString = (str(time) + "," +
+def AddData(dataTime, count, rate):
+    DataString = (str(dataTime) + "," +
                   str(count) + "," +
                   str(rate) + "\n")
     #file = open(tempFileName, "w+")
@@ -90,9 +90,9 @@ def FileSave(RunCount):
 
 class MainApp(sr400_GUI.Ui_Form):
     #lists and variables
-    TimeValList = [0]
-    CountsList = [0]
-    CountRateList = []
+    curTimeVal = 0.0
+    curCountVal = 0
+    curCountRate = 0.0
     
     TotalAvg = 0
     Samples = 0
@@ -101,7 +101,7 @@ class MainApp(sr400_GUI.Ui_Form):
     
     RunCount = 0      #Tallies number of measurement periods in current session
     NPER = 2000     #the number of periods
-    curBin = 0;
+    curPeriod = 1   #the current period (1-2000)
     
     #Counter parameters controlled by GUI
     TimeInt = 3
@@ -151,8 +151,8 @@ class MainApp(sr400_GUI.Ui_Form):
         assert TSETText[2] in self.Exponents, "Exponent must range \
             from 0 to 11!"
 
-        #convert string to proper float
-        self.TimeInt = self.TSETtoFloat(TSETText)
+        #convert string to proper float and add dwell time
+        self.TimeInt = self.TSETtoFloat(TSETText) + 0.002
         print(self.TimeInt)
         print(type(self.TimeInt))
         
@@ -173,29 +173,31 @@ class MainApp(sr400_GUI.Ui_Form):
         
     def Start_fxn(self):
         """starts the data collection"""
-        #reset data variables
-        self.TimeValList = [0]
-        self.CountsList = [0]
-        self.CountRateList = []
+        #reset data and tracking variables
+        self.curTimeVal = 0.0
+        self.curCountVal = 0
+        self.curCountRate = 0.0
+        self.curPeriod = 1
         
         #clear graphs
-        self.cvtGraph.clear()
         self.rvtGraph.clear()
         
         #enable/disable buttons
         self.StopBtn.setEnabled(True)
         self.StartBtn.setEnabled(False)
-        
-        #start the counter and get the reference time
-        sr400.write('cr; cs')
+
+        #sets the time interval through tset
+        self.TSET_fxn()
+
+        #sets dwell time, reset and start the counter
+        sr400.write("DT 2E-3")
+        sr400.write("cr")
+        sr400.write("cs")
         
         self.FileSetup()
         
-        #sets the time interval through tset
-        self.TSET_fxn()
-        
-        #starts the QTimer at timeInt + 2ms dwell time
-        self.graphTimer.start(self.TimeInt * 1000 + 2)
+        #starts the QTimer at timeInt, already includes 2ms dwell time
+        self.graphTimer.start(self.TimeInt * 1000)
     
     def FileSetup(self):
         TimeL = str(datetime.datetime.now().time())
@@ -210,48 +212,40 @@ class MainApp(sr400_GUI.Ui_Form):
     
     def Update(self):
         """gets current count and updates instance variables"""
-        #get and append most recent count, time data
-        data = sr400.query("xa \r")
-        currentTime = self.TimeValList[-1] + self.TimeInt
-        currentCount = int(data)
+        #get data: continually ask for i-th point until not -1
+        data = -1
         
-        self.TimeValList.append(currentTime)
-        self.CountsList.append(currentCount)
+        while (data < 0):
+            data = int(sr400.query("QA " + str(self.curPeriod)))
         
+        #increase nperiods variable
+        self.curPeriod += 1
         
-        print("counts and time list")
-        print(self.CountsList)
+        #update data variables time, count, countrate
+        self.curTimeVal += self.TimeInt
+        self.curCountVal = int(data)
+        self.curCountRate = float(self.curCountVal) / self.TimeInt
         
-        
-        #add new countrate
-        self.CountRateList.append((self.CountsList[-1] - self.CountsList[-2])/ 
-                                  (self.TimeValList[-1] - self.TimeValList[-2]))
-        print(self.CountRateList, '\n')
-        
-        
-        self.Samples += 1
-        self.TotalAvg = np.mean(self.CountsList)
-        self.StDev = np.std(self.CountsList)
-        self.StErr = self.StDev / np.sqrt(self.Samples)
+        #update statistics
+#        self.Samples += 1
+#        self.TotalAvg = np.mean(self.CountsList)
+#        self.StDev = np.std(self.CountsList)
+#        self.StErr = self.StDev / np.sqrt(self.Samples)
         
         print("Starting to graph...")
         
-        #graph counts vs time and count rate vs time: ignore first rate point
-        self.cvtGraph.plot(self.TimeValList[-2:], self.CountsList[-2:],
+        #graph counts vs time and count rate vs time:
+        self.rvtGraph.plot([self.curTimeVal], [self.curCountRate],
                            pen = (1, 1), symbol = 'o')
-        if len(self.CountRateList) > 2:
-            self.rvtGraph.plot(self.TimeValList[-2:], self.CountRateList[-2:],
-                               pen = (1, 1), symbol = 'o')
         
-
+        #update GUI labels
+        self.TimeVL.setText(str(self.curTimeVal))
+        self.PhotonVL.setText(str(self.curCountVal))
+#        self.TotAvgVL.setText(str(sel)
+#        self.StDevVL.setText(str(self.StDev))
+#        self.StErrVL.setText(str(self.StErr))
         
-        self.TimeVL.setText(str(self.TimeValList[-1]))
-        self.PhotonVL.setText(str(self.CountsList[-1] - self.CountsList[-2]))
-        self.TotAvgVL.setText(str(self.TotalAvg))
-        self.StDevVL.setText(str(self.StDev))
-        self.StErrVL.setText(str(self.StErr))
-        
-        AddData(currentTime, currentCount, self.CountRateList[-1])
+        AddData(self.curTimeVal, self.curCountVal, self.curCountRate)
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
