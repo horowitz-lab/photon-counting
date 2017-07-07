@@ -10,11 +10,9 @@ Created on Fri Jun 23 14:23:25 2017
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
-import numpy as np
 import sys
 import sr400_GUI
 import visa
-import time
 import datetime
 import os
 
@@ -63,8 +61,6 @@ def AddData(dataTime, count, rate):
                   str(rate) + "\n")
     #file = open(tempFileName, "w+")
     temp.write(DataString)
-    print("\nSuccessfully added new data!\n")
-    print(temp.readlines())  #FT
     #file.close()
 
 #This function is called by Stop_fxn().
@@ -102,10 +98,12 @@ class MainApp(sr400_GUI.Ui_Form):
     RunCount = 0      #Tallies number of measurement periods in current session
     NPER = 2000     #the number of periods
     curPeriod = 1   #the current period (1-2000)
+    scrollWidth = 20   #the width of the x axis (in s)
+    scrollCounter = 1   #keeps track of the window scroll number
     
     #Counter parameters controlled by GUI
-    TimeInt = 3
-    TSET = 0
+    TimeInt = 0
+    
     
     Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     Exponents = ["0",] + Bases + ["10", "11"]
@@ -115,7 +113,6 @@ class MainApp(sr400_GUI.Ui_Form):
     
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
-        print('Check 2')
         
         #setup SR400 to do nperiods = 2000
         sr400.write('np 2000')
@@ -124,10 +121,16 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
         
+        #QTimer to update and call for data
         self.graphTimer = QTimer()
         self.graphTimer.setSingleShot(False)
         self.graphTimer.timeout.connect(self.Update)
 
+        #QTimer to scroll the graph
+        self.scrollTimer = QTimer()
+        self.scrollTimer.setSingleShot(False)
+        self.scrollTimer.timeout.connect(self.scroll)
+        
 #--------------Formatting Functions-------------------------------------------#
     def TSETtoFloat(self, text):
         #converts a string of the form NUMeNUM to an float
@@ -141,8 +144,6 @@ class MainApp(sr400_GUI.Ui_Form):
            
         #get value and assert it's in correct form
         TSETText = self.TSETBox.toPlainText()
-        print(TSETText)
-        print(type(TSETText))
 
         assert TSETText[0] in self.Bases, "Base must be a \
             non-zero number!"
@@ -153,8 +154,6 @@ class MainApp(sr400_GUI.Ui_Form):
 
         #convert string to proper float and add dwell time
         self.TimeInt = self.TSETtoFloat(TSETText) + 0.002
-        print(self.TimeInt)
-        print(type(self.TimeInt))
         
         #set the sr400 to that time period
         sr400.write('cp2, ' + TSETText)
@@ -178,6 +177,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.curCountVal = 0
         self.curCountRate = 0.0
         self.curPeriod = 1
+        self.scrollCounter = 1
         
         #clear graphs
         self.rvtGraph.clear()
@@ -198,12 +198,14 @@ class MainApp(sr400_GUI.Ui_Form):
         
         #starts the QTimer at timeInt, already includes 2ms dwell time
         self.graphTimer.start(self.TimeInt * 1000)
+        
+        #starts the scroll timer
+        self.scrollTimer.start(self.scrollWidth * 1000)
     
     def FileSetup(self):
         TimeL = str(datetime.datetime.now().time())
         TimeS = TimeL[0:8]
         self.RunCount += 1
-        print("Run #", self.RunCount)
         global tempFileName 
         tempFileName = (DateS + "_Data_" + TimeS + ".csv")
         global temp
@@ -226,26 +228,20 @@ class MainApp(sr400_GUI.Ui_Form):
         self.curCountVal = int(data)
         self.curCountRate = float(self.curCountVal) / self.TimeInt
         
-        #update statistics
-#        self.Samples += 1
-#        self.TotalAvg = np.mean(self.CountsList)
-#        self.StDev = np.std(self.CountsList)
-#        self.StErr = self.StDev / np.sqrt(self.Samples)
-        
-        print("Starting to graph...")
-        
         #graph counts vs time and count rate vs time:
         self.rvtGraph.plot([self.curTimeVal], [self.curCountRate],
-                           pen = (1, 1), symbol = 'o')
+                           pen = (1, 1), symbol = '+')
         
-        #update GUI labels
         self.TimeVL.setText(str(self.curTimeVal))
         self.PhotonVL.setText(str(self.curCountVal))
-#        self.TotAvgVL.setText(str(sel)
-#        self.StDevVL.setText(str(self.StDev))
-#        self.StErrVL.setText(str(self.StErr))
         
         AddData(self.curTimeVal, self.curCountVal, self.curCountRate)
+    
+    def scroll(self):
+        """clears, scrolls the window, leaving the last second still visible"""
+        self.rvtGraph.setXRange(self.scrollWidth * self.scrollCounter,
+                                self.scrollWidth * (self.scrollCounter + 1))
+        self.scrollCounter += 1
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

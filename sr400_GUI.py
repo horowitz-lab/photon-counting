@@ -163,7 +163,8 @@ class Ui_Form(object):
         #countrate graph
         self.rvtGraph = PlotWidget(Form, title = "Rate v Time", labels = 
                                    {"left" : "Rate (Counts/Second)", 
-                                    "bottom" : "Time (seconds)"})
+                                    "bottom" : "Time (seconds)"}, 
+                                    clipToView = True)
         self.rvtGraph.setObjectName("rvtGraph")
         self.rvtGraph.setXRange(0, 20)
         self.gridLayout.addWidget(self.rvtGraph, 3, 0, 1, 7)
