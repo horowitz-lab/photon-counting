@@ -55,13 +55,14 @@ os.makedirs(saveDir)
 os.chdir(saveDir)
 
 #This function is called by Update().
-def AddData(dataTime, count, rate):
-    DataString = (str(dataTime) + "," +
-                  str(count) + "," +
-                  str(rate) + "\n")
-    #file = open(tempFileName, "w+")
-    temp.write(DataString)
-    #file.close()
+def AddData(dataTimes, counts, rates):
+    """Given three lists of the same length, add all the data to data file"""
+    for entry in range(len(dataTimes)):
+        DataString = (str(dataTimes[entry]) + "," + str(counts[entry]) + "," +
+                      str(rates[entry]) + "\n")
+        #file = open(tempFileName, "w+")
+        temp.write(DataString)
+        #file.close()
 
 #This function is called by Stop_fxn().
 
@@ -86,9 +87,7 @@ def FileSave(RunCount):
 
 class MainApp(sr400_GUI.Ui_Form):
     #lists and variables
-    curTimeVal = 0.0
-    curCountVal = 0
-    curCountRate = 0.0
+    curTimeVal = 0
     
     TotalAvg = 0
     Samples = 0
@@ -125,11 +124,6 @@ class MainApp(sr400_GUI.Ui_Form):
         self.graphTimer = QTimer()
         self.graphTimer.setSingleShot(False)
         self.graphTimer.timeout.connect(self.Update)
-
-        #QTimer to scroll the graph
-        self.scrollTimer = QTimer()
-        self.scrollTimer.setSingleShot(False)
-        self.scrollTimer.timeout.connect(self.scroll)
         
 #--------------Formatting Functions-------------------------------------------#
     def TSETtoFloat(self, text):
@@ -173,14 +167,13 @@ class MainApp(sr400_GUI.Ui_Form):
     def Start_fxn(self):
         """starts the data collection"""
         #reset data and tracking variables
-        self.curTimeVal = 0.0
-        self.curCountVal = 0
-        self.curCountRate = 0.0
+        self.curTimeVal = 0
         self.curPeriod = 1
         self.scrollCounter = 1
         
-        #clear graphs
+        #clear graph and reset window range
         self.rvtGraph.clear()
+        self.rvtGraph.setXRange(0, self.scrollWidth)
         
         #enable/disable buttons
         self.StopBtn.setEnabled(True)
@@ -198,9 +191,6 @@ class MainApp(sr400_GUI.Ui_Form):
         
         #starts the QTimer at timeInt, already includes 2ms dwell time
         self.graphTimer.start(self.TimeInt * 1000)
-        
-        #starts the scroll timer
-        self.scrollTimer.start(self.scrollWidth * 1000)
     
     def FileSetup(self):
         TimeL = str(datetime.datetime.now().time())
@@ -214,28 +204,36 @@ class MainApp(sr400_GUI.Ui_Form):
     
     def Update(self):
         """gets current count and updates instance variables"""
-        #get data: continually ask for i-th point until not -1
-        data = -1
+        #create list holders for times and rates
+        #get data: continually ask for i-th point until not -1, add to list
+        countVals = []
+        timeVals = []
+        rateVals = []
         
-        while (data < 0):
+        #poll for data until get -1
+        data = int(sr400.query("QA " + str(self.curPeriod)))
+        while (data > -1):
+            #add to list, update other vals
+            countVals.append(data)
+            self.curTimeVal += self.TimeInt
+            timeVals.append(self.curTimeVal)
+            rateVals.append(data / self.TimeInt)           
+            
+            #increase curPeriod, query for next data point
+            self.curPeriod += 1
             data = int(sr400.query("QA " + str(self.curPeriod)))
         
-        #increase nperiods variable
-        self.curPeriod += 1
-        
-        #update data variables time, count, countrate
-        self.curTimeVal += self.TimeInt
-        self.curCountVal = int(data)
-        self.curCountRate = float(self.curCountVal) / self.TimeInt
+        #shift window if enought time passed
+        if (self.curTimeVal > self.scrollCounter * self.scrollWidth):
+            self.scroll()
         
         #graph counts vs time and count rate vs time:
-        self.rvtGraph.plot([self.curTimeVal], [self.curCountRate],
-                           pen = (1, 1), symbol = '+')
+        self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
         
         self.TimeVL.setText(str(self.curTimeVal))
-        self.PhotonVL.setText(str(self.curCountVal))
+        self.PhotonVL.setText(str(countVals[-1]))
         
-        AddData(self.curTimeVal, self.curCountVal, self.curCountRate)
+        AddData(timeVals, countVals, rateVals)
     
     def scroll(self):
         """clears, scrolls the window, leaving the last second still visible"""
