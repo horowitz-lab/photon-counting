@@ -11,7 +11,7 @@ from pyqtgraph import PlotWidget
 
 class Ui_Form(object):
     
-    ##### not pyuic code start ###################################
+        ##### not pyuic code start ###################################
     _timeList = []
     
     def __init__(self, Form):
@@ -19,8 +19,6 @@ class Ui_Form(object):
         self.setupUi(Form)
         
     ######## not pyuic code end ########################
-    
-    
     
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -165,12 +163,12 @@ class Ui_Form(object):
         self.retranslateUi(Form)
         self.NPERSlider.valueChanged['int'].connect(self.NPERVL.setNum)
         QtCore.QMetaObject.connectSlotsByName(Form)
-        
-########### also extra#################################################
+
+        ########### also extra#################################################
         Form.show()
         
         ######################## end extra #################
-
+        
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
@@ -178,8 +176,8 @@ class Ui_Form(object):
         self.StartBtn.setText(_translate("Form", "START"))
         self.StopBtn.setText(_translate("Form", "STOP"))
         self.NPERLabel.setText(_translate("Form", "# of Bins"))
-        self.NPERVL.setText(_translate("Form", "2000"))
-        self.TotAvgVL.setText(_translate("Form", "666"))
+        self.NPERVL.setText(_translate("Form", "0"))
+        self.TotAvgVL.setText(_translate("Form", "0"))
         self.TotAvgLabel.setText(_translate("Form", "Total Average"))
         self.TimeLabel.setText(_translate("Form", "Time (s)"))
         self.TimeVL.setText(_translate("Form", "0"))
@@ -191,3 +189,6 @@ class Ui_Form(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">9e11</p></body></html>"))
         self.PhotonVL.setText(_translate("Form", "0"))
         self.PhotonLabel.setText(_translate("Form", "Photons"))
+
+
+

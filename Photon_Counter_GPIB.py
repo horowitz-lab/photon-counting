@@ -221,9 +221,8 @@ class MainApp(SR400_2UI.Ui_Form):
             data = int(sr400.query("QA " + str(self.curPeriod)))
         
         #shift window if enought time passed
-        if not self.AutoscaleBox.isChecked():
-            if (self.curTimeVal > self.scrollCounter * self.scrollWidth):
-                self.scroll()
+        if (self.curTimeVal > self.scrollCounter * self.scrollWidth):
+            self.scroll()
         
         #graph counts vs time and count rate vs time:
         self.Graph.plot(timeVals, rateVals, pen = None, symbol = '+')
