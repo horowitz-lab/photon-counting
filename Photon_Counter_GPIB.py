@@ -216,8 +216,9 @@ class MainApp(sr400_GUI.Ui_Form):
             #add to list, update other vals
             countVals.append(data)
             self.curTimeVal += self.TimeInt
+            self.curTimeVal = round(self.curTimeVal, 3)
             timeVals.append(self.curTimeVal)
-            rateVals.append(data / self.TimeInt)           
+            rateVals.append(round(data / self.TimeInt, 3))         
             
             #increase curPeriod, query for next data point
             self.curPeriod += 1
