@@ -11,7 +11,7 @@ Created on Fri Jun 23 14:23:25 2017
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
 import sys
-import SR400_2UI
+import sr400_gui
 import visa
 import datetime
 import os

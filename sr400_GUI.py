@@ -7,8 +7,18 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from pyqtgraph import PlotWidget
+#need these imports
 
 class Ui_Form(object):
+#######Necessary extra code start############
+    _timeList = []
+    
+    def __init__(self, Form):
+        super().__init__()
+        self.setupUi(Form)
+########Extra code end#######################          
+    
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(1036, 857)
@@ -51,9 +61,15 @@ class Ui_Form(object):
         self.NPERSlider.setTickInterval(100)
         self.NPERSlider.setObjectName("NPERSlider")
         self.gridLayout.addWidget(self.NPERSlider, 0, 1, 1, 3)
-        self.Graph = PlotWidget(Form)
+        
+        self.Graph = PlotWidget(Form, title = "Rate v Time", labels =
+                                {"left" : "Rate (Counts/Second)",
+                                 "bottom" : "Time (seconds)"},
+                                 clipToView = True)
+        self.Graph.setXRange(0, 20)
         self.Graph.setMinimumSize(QtCore.QSize(791, 611))
         self.Graph.setObjectName("Graph")
+        
         self.gridLayout.addWidget(self.Graph, 4, 0, 1, 5)
         self.NPERLabel = QtWidgets.QLabel(Form)
         self.NPERLabel.setMinimumSize(QtCore.QSize(101, 27))
@@ -153,6 +169,10 @@ class Ui_Form(object):
         self.NPERSlider.valueChanged['int'].connect(self.NPERVL.setNum)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
+###############also extra
+        Form.show()
+###############extra end
+
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
@@ -173,15 +193,4 @@ class Ui_Form(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">9e11</p></body></html>"))
         self.PhotonVL.setText(_translate("Form", "0"))
         self.PhotonLabel.setText(_translate("Form", "Photons"))
-
-from pyqtgraph import PlotWidget
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
-    ui = Ui_Form()
-    ui.setupUi(Form)
-    Form.show()
-    sys.exit(app.exec_())
 
