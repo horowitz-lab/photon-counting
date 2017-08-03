@@ -35,8 +35,6 @@ sr400.timeout = 1000
                            #__Defining Variables__#
 global temp
 
-
-
 #This line formats the categories of the data for a text file.
 Header = "Time (s),Total Counts,Rate (counts/s)\n\n"
 
@@ -68,12 +66,7 @@ def AddData(dataTimes, counts, rates):
 
 def FileSave(RunCount):             
     #read_op = open(tempFileName, "r")
-    
-    #readlines() is used rather than read() because it will read the entirety
-    #of the file if no parameter is given to it, whereas read() would just read
-    #the file starting at the end of the last operation on it (right after the
-    #last character was written to it).
-                                                               
+                   
     #FullData = read_op.readlines()
     temp.close()
     print("Here is your file: \n\n")
@@ -193,8 +186,11 @@ class MainApp(sr400_GUI.Ui_Form):
         self.graphTimer.start(self.TimeInt * 1000)
     
     def FileSetup(self):
+        
+        #Names the file storing the data from this run
         TimeL = str(datetime.datetime.now().time())
         TimeS = TimeL[0:8]
+        
         self.RunCount += 1
         global tempFileName 
         tempFileName = (DateS + "_Data_" + TimeS + ".csv")
@@ -216,8 +212,9 @@ class MainApp(sr400_GUI.Ui_Form):
             #add to list, update other vals
             countVals.append(data)
             self.curTimeVal += self.TimeInt
+            self.curTimeVal = round(self.curTimeVal, 3)
             timeVals.append(self.curTimeVal)
-            rateVals.append(data / self.TimeInt)           
+            rateVals.append(round(data / self.TimeInt, 3))           
             
             #increase curPeriod, query for next data point
             self.curPeriod += 1
