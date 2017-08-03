@@ -116,6 +116,7 @@ class MainApp(SR400_2UI.Ui_Form):
         #QTimer to update and call for data
         self.graphTimer = QTimer()
         self.graphTimer.setSingleShot(False)
+        print("There's a graph timer!")
         self.graphTimer.timeout.connect(self.Update)
         
 #--------------------------Formatting Functions-------------------------------#
@@ -202,6 +203,7 @@ class MainApp(SR400_2UI.Ui_Form):
         """gets current count and updates instance variables"""
         #create list holders for times and rates
         #get data: continually ask for i-th point until not -1, add to list
+        print("Updating...")
         timeVals = []
         countVals = []
         rateVals = []
@@ -214,7 +216,16 @@ class MainApp(SR400_2UI.Ui_Form):
             self.curTimeVal += self.TimeInt
             self.curTimeVal = round(self.curTimeVal, 3)
             timeVals.append(self.curTimeVal)
-            rateVals.append(round(data / self.TimeInt, 3))           
+            rateVals.append(round(data / self.TimeInt, 3))  
+            
+            print("Here's what's up...\n")
+            print(countVals)
+            print(timeVals)
+            print(rateVals)
+            
+            print(str(self.curTimeVal))
+            print(str(data))
+            print(str(rateVals[-1]))
             
             #increase curPeriod, query for next data point
             self.curPeriod += 1
