@@ -87,6 +87,7 @@ def FileSave(RunCount):
 
 class MainApp(sr400_GUI.Ui_Form):
     #lists and variables
+    AS = ""
     curTimeVal = 0
     
     TotalAvg = 0
@@ -120,10 +121,19 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
         
+        self.StopBtn.setEnabled(False)
+        self.StartBtn.setEnabled(True)
+        
         #QTimer to update and call for data
         self.graphTimer = QTimer()
         self.graphTimer.setSingleShot(False)
         self.graphTimer.timeout.connect(self.Update)
+        
+        self.AS = input("Would you like to autoscale your graph (Y/N)? ")
+        if self.AS == "Y":
+            print("\nAutoscale enabled!")
+        elif self.AS == "N":
+            print("\nAutoscale disabled!")
         
 #--------------Formatting Functions-------------------------------------------#
     def TSETtoFloat(self, text):
@@ -159,6 +169,9 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StopFlag = 1
         self.GroupTally = 0
         """
+        self.StopBtn.setEnabled(False)
+        self.StartBtn.setEnabled(True)
+        
         sr400.write('cr')
         self.StartBtn.setEnabled(True)
         self.graphTimer.stop()
@@ -238,8 +251,12 @@ class MainApp(sr400_GUI.Ui_Form):
     
     def scroll(self):
         """clears, scrolls the window, leaving the last second still visible"""
-        self.rvtGraph.setXRange(self.scrollWidth * self.scrollCounter,
+        if self.AS == "N":
+            self.rvtGraph.setXRange(self.scrollWidth * self.scrollCounter,
                                 self.scrollWidth * (self.scrollCounter + 1))
+        elif self.AS == "Y":
+            self.rvtGraph.setXRange(0, 
+                                    self.scrollWidth * (self.scrollCounter + 1))
         self.scrollCounter += 1
 
 def main():
