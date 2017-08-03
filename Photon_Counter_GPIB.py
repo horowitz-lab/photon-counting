@@ -11,7 +11,7 @@ Created on Fri Jun 23 14:23:25 2017
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
 import sys
-import sr400_GUI
+import SR400_2UI
 import visa
 import datetime
 import os
@@ -78,7 +78,7 @@ def FileSave(RunCount):
 
 #----------------------------Establishing Variables---------------------------#
 
-class MainApp(sr400_GUI.Ui_Form):
+class MainApp(SR400_2UI.Ui_Form):
     #lists and variables
     curTimeVal = 0
     
@@ -118,7 +118,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.graphTimer.setSingleShot(False)
         self.graphTimer.timeout.connect(self.Update)
         
-#--------------Formatting Functions-------------------------------------------#
+#--------------------------Formatting Functions-------------------------------#
     def TSETtoFloat(self, text):
         #converts a string of the form NUMeNUM to an float
         return float(text[0]) * 10 ** int(text[2:]) / (1e7)
@@ -165,8 +165,8 @@ class MainApp(sr400_GUI.Ui_Form):
         self.scrollCounter = 1
         
         #clear graph and reset window range
-        self.rvtGraph.clear()
-        self.rvtGraph.setXRange(0, self.scrollWidth)
+        self.Graph.clear()
+        self.Graph.setXRange(0, self.scrollWidth)
         
         #enable/disable buttons
         self.StopBtn.setEnabled(True)
@@ -202,8 +202,8 @@ class MainApp(sr400_GUI.Ui_Form):
         """gets current count and updates instance variables"""
         #create list holders for times and rates
         #get data: continually ask for i-th point until not -1, add to list
-        countVals = []
         timeVals = []
+        countVals = []
         rateVals = []
         
         #poll for data until get -1
@@ -221,11 +221,12 @@ class MainApp(sr400_GUI.Ui_Form):
             data = int(sr400.query("QA " + str(self.curPeriod)))
         
         #shift window if enought time passed
-        if (self.curTimeVal > self.scrollCounter * self.scrollWidth):
-            self.scroll()
+        if not self.AutoscaleBox.isChecked():
+            if (self.curTimeVal > self.scrollCounter * self.scrollWidth):
+                self.scroll()
         
         #graph counts vs time and count rate vs time:
-        self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
+        self.Graph.plot(timeVals, rateVals, pen = None, symbol = '+')
         
         self.TimeVL.setText(str(self.curTimeVal))
         self.PhotonVL.setText(str(countVals[-1]))
@@ -234,7 +235,7 @@ class MainApp(sr400_GUI.Ui_Form):
     
     def scroll(self):
         """clears, scrolls the window, leaving the last second still visible"""
-        self.rvtGraph.setXRange(self.scrollWidth * self.scrollCounter,
+        self.Graph.setXRange(self.scrollWidth * self.scrollCounter,
                                 self.scrollWidth * (self.scrollCounter + 1))
         self.scrollCounter += 1
 
