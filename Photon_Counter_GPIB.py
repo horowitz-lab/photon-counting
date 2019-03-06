@@ -48,7 +48,7 @@ DateL = datetime.date.today().isoformat()      # = yyyy-mm-dd
 DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]   # = y[2:3]mmdd
 
 TimeL = str(datetime.datetime.now().time())         ###################
-TimeS = TimeL[0:8]
+TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
 
 saveDir = DateL + "_" + TimeS + "_SavedData"  #The directory FileName goes in
 os.makedirs(saveDir)
@@ -138,8 +138,8 @@ class MainApp(sr400_GUI.Ui_Form):
 #--------------Formatting Functions-------------------------------------------#
     def TSETtoFloat(self, text):
         #converts a string of the form NUMeNUM to an float
-        return float(text[0]) * 10 ** int(text[2:]) / (1e7)
-    
+        print(text[:])
+        return float(text[:])# * 10 ** int(text[2:]) / 1e7
     
 #--------------------------GUI Widget Functions-------------------------------#
     def TSET_fxn(self):
@@ -149,12 +149,12 @@ class MainApp(sr400_GUI.Ui_Form):
         #get value and assert it's in correct form
         TSETText = self.TSETBox.toPlainText()
 
-        assert TSETText[0] in self.Bases, "Base must be a \
-            non-zero number!"
-        assert TSETText[1] == "e", "Second character must be e for \
-            base-exponent notation!"
-        assert TSETText[2] in self.Exponents, "Exponent must range \
-            from 0 to 11!"
+        #assert TSETText[0] in self.Bases, "Base must be a \
+        #     non-zero number!"
+        # assert TSETText[1] == "e", "Second character must be e for \
+        #     base-exponent notation!"
+        #assert TSETText[2] in self.Exponents, "Exponent must range \
+           # from 0 to 11!"
 
         #convert string to proper float and add dwell time
         self.TimeInt = self.TSETtoFloat(TSETText) + 0.002
@@ -207,7 +207,7 @@ class MainApp(sr400_GUI.Ui_Form):
     
     def FileSetup(self):
         TimeL = str(datetime.datetime.now().time())
-        TimeS = TimeL[0:8]
+        TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
         self.RunCount += 1
         global tempFileName 
         tempFileName = (DateS + "_Data_" + TimeS + ".csv")
