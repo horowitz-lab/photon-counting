@@ -15,7 +15,7 @@ import sr400_GUI
 import visa
 import datetime
 import os
-
+import numpy as np
 #--------------------------Setting Up GPIB Connectivity-----------------------#
 
 rm = visa.ResourceManager()
@@ -36,9 +36,8 @@ sr400.timeout = 1000
 global temp
 
 
-
 #This line formats the categories of the data for a text file.
-Header = "Time (s),Total Counts,Rate (counts/s)\n\n"
+Header = "Time (s),   Total Counts,   Rate (counts/period),   average rate,   StDev,   StErr\n\n"
 
 Handle = ""         #Stores a name to use for saved files from current session
 FileName = ""       #For the SAVED data file
@@ -54,44 +53,40 @@ saveDir = DateL + "_" + TimeS + "_SavedData"  #The directory FileName goes in
 os.makedirs(saveDir)
 os.chdir(saveDir)
 
+
 #This function is called by Update().
-def AddData(dataTimes, counts, rates):
+def AddData(dataTimes, counts, rates, avg, stdev, sterr):
     """Given three lists of the same length, add all the data to data file"""
+
     for entry in range(len(dataTimes)):
-        DataString = (str(dataTimes[entry]) + "," + str(counts[entry]) + "," +
-                      str(rates[entry]) + "\n")
-        #file = open(tempFileName, "w+")
-        temp.write(DataString)
-        #file.close()
+        DataString = (str(dataTimes[entry]) + ",   " + str(counts[entry]) +
+                      ",   " + str(rates[entry])+",   " + str(avg) + ",   " + 
+                      str(stdev) +  ",   " +  str(sterr) + "\n")
+             
+    temp.write(DataString)
+  
 
 #This function is called by Stop_fxn().
-
 def FileSave(RunCount):             
-    #read_op = open(tempFileName, "r")
     
-    #readlines() is used rather than read() because it will read the entirety
-    #of the file if no parameter is given to it, whereas read() would just read
-    #the file starting at the end of the last operation on it (right after the
-    #last character was written to it).
-                                                               
-    #FullData = read_op.readlines()
     temp.close()
     print("Here is your file: \n\n")
-    print(open(tempFileName).read())
+    data = open(tempFileName).read()
+
+    print(data)
     
     #Done to ensure temp can be properly accessed and deleted now that it
     #isn't necessary anymore.
     print("\nYour file has been successfully saved!")
 
-#----------------------------Establishing Variables---------------------------#
 
+#----------------------------Establishing Variables---------------------------#
 class MainApp(sr400_GUI.Ui_Form):
     #lists and variables
     AS = ""
     curTimeVal = 0
-    
-    TotalAvg = 0
-    Samples = 0
+    Ratelst= []
+    average = 0
     StDev = 0
     StErr = 0
     
@@ -105,8 +100,8 @@ class MainApp(sr400_GUI.Ui_Form):
     TimeInt = 0
     
     
-    Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    Exponents = ["0",] + Bases + ["10", "11"]
+    #Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    #Exponents = ["0",] + Bases + ["10", "11"]
     
     currentTime = 0
     currentCount = 0
@@ -128,18 +123,11 @@ class MainApp(sr400_GUI.Ui_Form):
         self.graphTimer = QTimer()
         self.graphTimer.setSingleShot(False)
         self.graphTimer.timeout.connect(self.Update)
-        
-        self.AS = input("Would you like to autoscale your graph (Y/N)? ")
-        if self.AS == "Y":
-            print("\nAutoscale enabled!")
-        elif self.AS == "N":
-            print("\nAutoscale disabled!")
-        
+    
 #--------------Formatting Functions-------------------------------------------#
     def TSETtoFloat(self, text):
         #converts a string of the form NUMeNUM to an float
-        print(text[:])
-        return float(text[:])# * 10 ** int(text[2:]) / 1e7
+        return float(text) # * 10 ** int(text[2:]) / (1e7)
     
 #--------------------------GUI Widget Functions-------------------------------#
     def TSET_fxn(self):
@@ -162,13 +150,9 @@ class MainApp(sr400_GUI.Ui_Form):
         #set the sr400 to that time period
         sr400.write('cp2, ' + TSETText)
         
+        
     def Stop_fxn(self):
-        """
-        self.StopBtn.setEnabled(False)
-        print('Stop Button works!')
-        self.StopFlag = 1
-        self.GroupTally = 0
-        """
+        
         self.StopBtn.setEnabled(False)
         self.StartBtn.setEnabled(True)
         
@@ -176,6 +160,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.setEnabled(True)
         self.graphTimer.stop()
         FileSave(self.RunCount)
+        
         
     def Start_fxn(self):
         """starts the data collection"""
@@ -205,6 +190,7 @@ class MainApp(sr400_GUI.Ui_Form):
         #starts the QTimer at timeInt, already includes 2ms dwell time
         self.graphTimer.start(self.TimeInt * 1000)
     
+    
     def FileSetup(self):
         TimeL = str(datetime.datetime.now().time())
         TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
@@ -215,6 +201,7 @@ class MainApp(sr400_GUI.Ui_Form):
         temp = open(tempFileName, "w+")
         temp.write(Header)
     
+    
     def Update(self):
         """gets current count and updates instance variables"""
         #create list holders for times and rates
@@ -222,41 +209,47 @@ class MainApp(sr400_GUI.Ui_Form):
         countVals = []
         timeVals = []
         rateVals = []
+ 
         
         #poll for data until get -1
-        data = int(sr400.query("QA " + str(self.curPeriod)))
+        data = int(sr400.query("QA " + str(self.curPeriod))) 
         while (data > -1):
             #add to list, update other vals
             countVals.append(data)
             self.curTimeVal += self.TimeInt
             self.curTimeVal = round(self.curTimeVal, 3)
             timeVals.append(self.curTimeVal)
-            rateVals.append(round(data / self.TimeInt, 3))         
-            
+            rateVals.append(round(data / self.TimeInt, 3)) 
             #increase curPeriod, query for next data point
+            
+            self.Ratelst.append(rateVals[0])
+            self.average = round(sum(self.Ratelst)/self.curPeriod, 3)
+            self.StDev = round(np.std(self.Ratelst), 3)
+            self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 3)
+            #print(str(self.average) + ", " + str(self.StDev) + ", " + str(self.StErr))
             self.curPeriod += 1
+            
             data = int(sr400.query("QA " + str(self.curPeriod)))
         
         #shift window if enought time passed
         if (self.curTimeVal > self.scrollCounter * self.scrollWidth):
             self.scroll()
         
-        #graph counts vs time and count rate vs time:
+        #graph: x = time, y = rate, or photon count/period
         self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
-        
+        #put in all the values into their respected places in GUI
         self.TimeVL.setText(str(self.curTimeVal))
         self.PhotonVL.setText(str(countVals[-1]))
-        
-        AddData(timeVals, countVals, rateVals)
+        self.TotAvgVL.setText(str(self.average))
+        self.StDevVL.setText(str(self.StDev))
+        self.StErrVL.setText(str(self.StErr))
+
+        AddData(timeVals, countVals, rateVals, self.average, self.StDev, self.StErr )
+    
     
     def scroll(self):
         """clears, scrolls the window, leaving the last second still visible"""
-        if self.AS == "N":
-            self.rvtGraph.setXRange(self.scrollWidth * self.scrollCounter,
-                                self.scrollWidth * (self.scrollCounter + 1))
-        elif self.AS == "Y":
-            self.rvtGraph.setXRange(0, 
-                                    self.scrollWidth * (self.scrollCounter + 1))
+        self.rvtGraph.setXRange(0, self.scrollWidth * (self.scrollCounter + 1))
         self.scrollCounter += 1
 
 def main():

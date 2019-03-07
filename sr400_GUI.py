@@ -24,7 +24,7 @@ class Ui_Form(object):
     
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(824, 630)
+        Form.resize(1000, 630)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
         
@@ -162,7 +162,7 @@ class Ui_Form(object):
         
         #countrate graph
         self.rvtGraph = PlotWidget(Form, title = "Rate v Time", labels = 
-                                   {"left" : "Rate (Counts/Second)", 
+                                   {"left" : "Rate (Counts/period)", 
                                     "bottom" : "Time (seconds)"}, 
                                     clipToView = True)
         self.rvtGraph.setObjectName("rvtGraph")
@@ -187,7 +187,7 @@ class Ui_Form(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">01.00</span></p></body></html>"))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">0.10</span></p></body></html>"))
         self.PhotonLabel.setText(_translate("Form", "Photons"))
         self.PhotonVL.setText(_translate("Form", "0"))
         self.TotAvgLabel.setText(_translate("Form", "Total Average"))
