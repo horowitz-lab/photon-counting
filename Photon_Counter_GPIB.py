@@ -16,6 +16,24 @@ import visa
 import datetime
 import os
 import numpy as np
+import serial
+
+#------------------------ Setting up Arduino Connectivity---------------------#
+arduino = serial.Serial('COM5', 9600)
+
+def valve(List): 
+    
+    rate = List[-1]
+    print(rate)
+    
+    if rate >= 1000:
+        arduino.write(b'1')
+        print
+    elif rate < 1000:  
+        arduino.write(b'0')
+  
+    
+
 #--------------------------Setting Up GPIB Connectivity-----------------------#
 
 rm = visa.ResourceManager()
@@ -60,7 +78,7 @@ def AddData(dataTimes, counts, rates, avg, stdev, sterr):
 
     for entry in range(len(dataTimes)):
         DataString = (str(dataTimes[entry]) + ",   " + str(counts[entry]) +
-                      ",   " + str(rates[entry])+",   " + str(avg) + ",   " + 
+                      ",   " + str(rates[entry])+ ",   " + str(avg) + ",   " + 
                       str(stdev) +  ",   " +  str(sterr) + "\n")
              
     temp.write(DataString)
@@ -160,6 +178,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.setEnabled(True)
         self.graphTimer.stop()
         FileSave(self.RunCount)
+        arduino.close()
         
         
     def Start_fxn(self):
@@ -188,7 +207,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.FileSetup()
         
         #starts the QTimer at timeInt, already includes 2ms dwell time
-        self.graphTimer.start(self.TimeInt * 1000)
+        self.graphTimer.start((self.TimeInt-.002) * 1000)
     
     
     def FileSetup(self):
@@ -223,6 +242,7 @@ class MainApp(sr400_GUI.Ui_Form):
             #increase curPeriod, query for next data point
             
             self.Ratelst.append(rateVals[0])
+            print(self.Ratelst[-1])
             self.average = round(sum(self.Ratelst)/self.curPeriod, 3)
             self.StDev = round(np.std(self.Ratelst), 3)
             self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 3)
@@ -243,6 +263,8 @@ class MainApp(sr400_GUI.Ui_Form):
         self.TotAvgVL.setText(str(self.average))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
+        
+        valve(self.Ratelst)
 
         AddData(timeVals, countVals, rateVals, self.average, self.StDev, self.StErr )
     
