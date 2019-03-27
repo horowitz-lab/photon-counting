@@ -23,13 +23,14 @@ arduino = serial.Serial('COM5', 9600)
 
 def valve(List): 
     
+    Threshold =11000000 
     rate = List[-1]
     print(rate)
     
-    if rate >= 1000:
+    if rate >= Threshold:
         arduino.write(b'1')
         print
-    elif rate < 1000:  
+    elif rate < Threshold:  
         arduino.write(b'0')
   
     
@@ -242,6 +243,7 @@ class MainApp(sr400_GUI.Ui_Form):
             #increase curPeriod, query for next data point
             
             self.Ratelst.append(rateVals[0])
+            print("hi")
             print(self.Ratelst[-1])
             self.average = round(sum(self.Ratelst)/self.curPeriod, 3)
             self.StDev = round(np.std(self.Ratelst), 3)
