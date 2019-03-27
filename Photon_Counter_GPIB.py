@@ -21,19 +21,15 @@ import serial
 #------------------------ Setting up Arduino Connectivity---------------------#
 arduino = serial.Serial('COM5', 9600)
 
-def valve(List): 
-    
-    Threshold =11000000 
-    rate = List[-1]
-    print(rate)
-    
-    if rate >= Threshold:
-        arduino.write(b'1')
-        print
-    elif rate < Threshold:  
-        arduino.write(b'0')
-  
-    
+def valve(List, Threshold): 
+        
+        rate = List[-1]
+        print(rate)
+        if rate >= Threshold:
+            arduino.write(b'1')
+            print("actuate!!")
+        elif rate < Threshold:  
+            arduino.write(b'0')    
 
 #--------------------------Setting Up GPIB Connectivity-----------------------#
 
@@ -117,8 +113,9 @@ class MainApp(sr400_GUI.Ui_Form):
     
     #Counter parameters controlled by GUI
     TimeInt = 0
+    #Threshold parameter controlled by GUI
     
-    
+    Threshold = 0 
     #Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     #Exponents = ["0",] + Bases + ["10", "11"]
     
@@ -148,24 +145,20 @@ class MainApp(sr400_GUI.Ui_Form):
         #converts a string of the form NUMeNUM to an float
         return float(text) # * 10 ** int(text[2:]) / (1e7)
     
+    
 #--------------------------GUI Widget Functions-------------------------------#
     def TSET_fxn(self):
         """gets the time value from the textbox and sets it as the sr400 time
            and sets an instance variable to hold that value"""
-           
         #get value and assert it's in correct form
         TSETText = self.TSETBox.toPlainText()
-
-        #assert TSETText[0] in self.Bases, "Base must be a \
-        #     non-zero number!"
-        # assert TSETText[1] == "e", "Second character must be e for \
-        #     base-exponent notation!"
-        #assert TSETText[2] in self.Exponents, "Exponent must range \
-           # from 0 to 11!"
-
         #convert string to proper float and add dwell time
         self.TimeInt = self.TSETtoFloat(TSETText) + 0.002
-        
+        #get value ot threshold and assert it's in correct form
+        TSETText1 = self.TSETBox1.toPlainText()
+        print(TSETText1)
+        #convert string to proper float
+        self.Threshold = self.TSETtoFloat(TSETText1)
         #set the sr400 to that time period
         sr400.write('cp2, ' + TSETText)
         
@@ -243,8 +236,7 @@ class MainApp(sr400_GUI.Ui_Form):
             #increase curPeriod, query for next data point
             
             self.Ratelst.append(rateVals[0])
-            print("hi")
-            print(self.Ratelst[-1])
+            
             self.average = round(sum(self.Ratelst)/self.curPeriod, 3)
             self.StDev = round(np.std(self.Ratelst), 3)
             self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 3)
@@ -261,18 +253,18 @@ class MainApp(sr400_GUI.Ui_Form):
         self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
         #put in all the values into their respected places in GUI
         self.TimeVL.setText(str(self.curTimeVal))
-        self.PhotonVL.setText(str(countVals[-1]))
-        self.TotAvgVL.setText(str(self.average))
+        self.PhotonVL.setText(str(rateVals[-1]))
+        """self.TotAvgVL.setText(str(self.average))
         self.StDevVL.setText(str(self.StDev))
-        self.StErrVL.setText(str(self.StErr))
+        self.StErrVL.setText(str(self.StErr))"""
         
-        valve(self.Ratelst)
+        valve(self.Ratelst, self.Threshold)
 
         AddData(timeVals, countVals, rateVals, self.average, self.StDev, self.StErr )
     
     
     def scroll(self):
-        """clears, scrolls the window, leaving the last second still visible"""
+        """ scrolls the window"""
         self.rvtGraph.setXRange(0, self.scrollWidth * (self.scrollCounter + 1))
         self.scrollCounter += 1
 
