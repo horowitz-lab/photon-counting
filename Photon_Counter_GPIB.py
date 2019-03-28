@@ -22,14 +22,17 @@ import serial
 arduino = serial.Serial('COM5', 9600)
 
 def valve(List, Threshold): 
-        
-        rate = List[-1]
-        print(rate)
-        if rate >= Threshold:
-            arduino.write(b'1')
-            print("actuate!!")
-        elif rate < Threshold:  
-            arduino.write(b'0')    
+    rate = List[-1]
+    print(rate)
+    
+    if(arduino.isOpen() == False):
+        arduino.open()
+    
+    if rate >= Threshold:
+        arduino.write(b'1')
+        print("actuate!!")
+    elif rate < Threshold:  
+        arduino.write(b'0')    
 
 #--------------------------Setting Up GPIB Connectivity-----------------------#
 
@@ -172,6 +175,8 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.setEnabled(True)
         self.graphTimer.stop()
         FileSave(self.RunCount)
+        self.Threshold = 0
+        arduino.write(b'0')
         arduino.close()
         
         
