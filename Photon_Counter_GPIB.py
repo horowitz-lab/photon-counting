@@ -3,7 +3,7 @@
 """
 Created on Fri Jun 23 14:23:25 2017
 
-@author: Houghton Yonge and Fuming Qiu
+@authors: Mikel Zemborain, Houghton Yonge and Fuming Qiu
 """
 
 #--------------------------------Library Imports------------------------------#
@@ -20,19 +20,6 @@ import serial
 
 #------------------------ Setting up Arduino Connectivity---------------------#
 arduino = serial.Serial('COM5', 9600)
-
-def valve(List, Threshold): 
-    rate = List[-1]
-    print(rate)
-    
-    if(arduino.isOpen() == False):
-        arduino.open()
-    
-    if rate >= Threshold:
-        arduino.write(b'1')
-        print("actuate!!")
-    elif rate < Threshold:  
-        arduino.write(b'0')    
 
 #--------------------------Setting Up GPIB Connectivity-----------------------#
 
@@ -66,20 +53,21 @@ DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]   # = y[2:3]mmdd
 
 TimeL = str(datetime.datetime.now().time())         ###################
 TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
-
-saveDir = DateL + "_" + TimeS + "_SavedData"  #The directory FileName goes in
+folder = DateL + "_" + TimeS + "_SavedData"  
+#The directory FileName goes in, look in SavedData folder in documents!
+saveDir = "C:/Users/HorowitzLab/Documents/SavedData/" + folder
 os.makedirs(saveDir)
 os.chdir(saveDir)
 
 
-#This function is called by Update().
-def AddData(dataTimes, counts, rates, avg, stdev, sterr):
+#This function is called by Update().                                           ##if you want to save average and its uncertainty##
+def AddData(dataTimes, counts, rates):                                          #, avg, stdev, sterr):
     """Given three lists of the same length, add all the data to data file"""
 
     for entry in range(len(dataTimes)):
         DataString = (str(dataTimes[entry]) + ",   " + str(counts[entry]) +
-                      ",   " + str(rates[entry])+ ",   " + str(avg) + ",   " + 
-                      str(stdev) +  ",   " +  str(sterr) + "\n")
+                      ",   " + str(rates[entry]) + "\n")                        #+ ",   " + str(avg) + ",   " + 
+                                                                                #str(stdev) +  ",   " +  str(sterr) + "\n")
              
     temp.write(DataString)
   
@@ -117,8 +105,8 @@ class MainApp(sr400_GUI.Ui_Form):
     #Counter parameters controlled by GUI
     TimeInt = 0
     #Threshold parameter controlled by GUI
-    
     Threshold = 0 
+    
     #Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
     #Exponents = ["0",] + Bases + ["10", "11"]
     
@@ -158,23 +146,43 @@ class MainApp(sr400_GUI.Ui_Form):
         #convert string to proper float and add dwell time
         self.TimeInt = self.TSETtoFloat(TSETText) + 0.002
         #get value ot threshold and assert it's in correct form
-        TSETText1 = self.TSETBox1.toPlainText()
-        print(TSETText1)
-        #convert string to proper float
-        self.Threshold = self.TSETtoFloat(TSETText1)
         #set the sr400 to that time period
         sr400.write('cp2, ' + TSETText)
+    
+    
+    def valve(self, List): 
+        #open serial comminucation with arduino if its not already open
+        if(arduino.isOpen() == False):
+            arduino.open()
+        #find the current count rate value, assign it as rate    
+        rate = List[-1]
         
+        #get Threshold value and assert it's in correct form
+        TSETText1 = self.TSETBox1.toPlainText()
+        #convert string to proper float
+        self.Threshold = self.TSETtoFloat(TSETText1)
+       
+        #if count rate is above the threshold, actuate valve.
+        if rate >= self.Threshold:
+            arduino.write(b'1')
+        #if count rate is below the threshold, de-actuate valve.     
+        elif rate < self.Threshold:  
+            arduino.write(b'0')    
         
     def Stop_fxn(self):
-        
+        """stops the data collection, commands data to be saved, 
+            closes serial communications"""
+        #stop button gets dissablec after being clicked, start button gets enabled    
         self.StopBtn.setEnabled(False)
         self.StartBtn.setEnabled(True)
         
+        #tells Photon counter to stop counting
         sr400.write('cr')
-        self.StartBtn.setEnabled(True)
+        
         self.graphTimer.stop()
         FileSave(self.RunCount)
+        
+        #reset the threshold limit, close valve and close serial communication
         self.Threshold = 0
         arduino.write(b'0')
         arduino.close()
@@ -210,6 +218,7 @@ class MainApp(sr400_GUI.Ui_Form):
     
     
     def FileSetup(self):
+        """sets up files"""
         TimeL = str(datetime.datetime.now().time())
         TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
         self.RunCount += 1
@@ -237,12 +246,12 @@ class MainApp(sr400_GUI.Ui_Form):
             self.curTimeVal += self.TimeInt
             self.curTimeVal = round(self.curTimeVal, 3)
             timeVals.append(self.curTimeVal)
-            rateVals.append(round(data / self.TimeInt, 3)) 
+            rateVals.append(round(data / self.TimeInt, 1)) 
             #increase curPeriod, query for next data point
             
             self.Ratelst.append(rateVals[0])
             
-            self.average = round(sum(self.Ratelst)/self.curPeriod, 3)
+            self.average = round(sum(self.Ratelst)/self.curPeriod, 1)
             self.StDev = round(np.std(self.Ratelst), 3)
             self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 3)
             #print(str(self.average) + ", " + str(self.StDev) + ", " + str(self.StErr))
@@ -258,14 +267,14 @@ class MainApp(sr400_GUI.Ui_Form):
         self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
         #put in all the values into their respected places in GUI
         self.TimeVL.setText(str(self.curTimeVal))
-        self.PhotonVL.setText(str(rateVals[-1]))
-        """self.TotAvgVL.setText(str(self.average))
+        self.CountRateVL.setText(str(rateVals[-1]))
+        self.TotAvgVL.setText(str(self.average))
         self.StDevVL.setText(str(self.StDev))
-        self.StErrVL.setText(str(self.StErr))"""
+        self.StErrVL.setText(str(self.StErr))
         
-        valve(self.Ratelst, self.Threshold)
-
-        AddData(timeVals, countVals, rateVals, self.average, self.StDev, self.StErr )
+        self.                                                                                                                                                                                    valve(self.Ratelst)
+                                                                                ##if you want to save average and its uncertainty##
+        AddData(timeVals, countVals, rateVals)                                  #, self.average, self.StDev, self.StErr )
     
     
     def scroll(self):

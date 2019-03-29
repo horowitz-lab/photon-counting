@@ -24,7 +24,7 @@ class Ui_Form(object):
     
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1000, 630)
+        Form.resize(1000, 700)
         self.gridLayout = QtWidgets.QGridLayout(Form)
         self.gridLayout.setObjectName("gridLayout")
         
@@ -41,7 +41,7 @@ class Ui_Form(object):
         self.TSETBox.setMinimumSize(QtCore.QSize(71, 31))
         self.TSETBox.setMaximumSize(QtCore.QSize(71, 31))
         self.TSETBox.setObjectName("TSETBox")
-        self.gridLayout.addWidget(self.TSETBox, 1, 3, 1, 1)
+        self.gridLayout.addWidget(self.TSETBox, 1, 2, 1, 2)
         
         self.TSETLabel1 = QtWidgets.QLabel(Form)
         self.TSETLabel1.setMinimumSize(QtCore.QSize(0, 31))
@@ -104,29 +104,29 @@ class Ui_Form(object):
         self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
         self.splitter_2.setObjectName("splitter_2")
         
-        ## when talking about photons here this actually means count rate ##
-        self.PhotonForm = QtWidgets.QSplitter(Form)
-        self.PhotonForm.setMinimumSize(QtCore.QSize(131, 31))
-        self.PhotonForm.setOrientation(QtCore.Qt.Horizontal)
-        self.PhotonForm.setObjectName("PhotonForm")
-        self.PhotonLabel = QtWidgets.QLabel(self.PhotonForm)
-        self.PhotonLabel.setMinimumSize(QtCore.QSize(91, 31))
-        self.PhotonLabel.setMaximumSize(QtCore.QSize(101, 41))
+       
+        self.CountRateForm = QtWidgets.QSplitter(Form)
+        self.CountRateForm.setMinimumSize(QtCore.QSize(131, 31))
+        self.CountRateForm.setOrientation(QtCore.Qt.Horizontal)
+        self.CountRateForm.setObjectName("CountRateForm")
+        self.CountRateLabel = QtWidgets.QLabel(self.CountRateForm)
+        self.CountRateLabel.setMinimumSize(QtCore.QSize(91, 31))
+        self.CountRateLabel.setMaximumSize(QtCore.QSize(101, 41))
         font = QtGui.QFont()
         font.setPointSize(18)
-        self.PhotonLabel.setFont(font)
-        self.PhotonLabel.setObjectName("PhotonLabel")
-        self.PhotonVL = QtWidgets.QLabel(self.PhotonForm)
-        self.PhotonVL.setMinimumSize(QtCore.QSize(23, 31))
-        self.PhotonVL.setMaximumSize(QtCore.QSize(16777215, 31))
+        self.CountRateLabel.setFont(font)
+        self.CountRateLabel.setObjectName("CountRateLabel")
+        self.CountRateVL = QtWidgets.QLabel(self.CountRateForm)
+        self.CountRateVL.setMinimumSize(QtCore.QSize(23, 31))
+        self.CountRateVL.setMaximumSize(QtCore.QSize(16777215, 31))
         font = QtGui.QFont()
         font.setPointSize(18)
-        self.PhotonVL.setFont(font)
-        self.PhotonVL.setObjectName("PhotonVL")
-        self.gridLayout.addWidget(self.PhotonForm, 2, 6, 1, 1)
-###-----------------------extra, unecessary stuff---------------------------### 
+        self.CountRateVL.setFont(font)
+        self.CountRateVL.setObjectName("CountRateVL")
+        self.gridLayout.addWidget(self.CountRateForm, 2, 6, 1, 1)
+
+###-----------------------stuff to evaluate APD's---------------------------### 
         
-        """
         self.TotAvgForm = QtWidgets.QSplitter(Form)
         self.TotAvgForm.setMinimumSize(QtCore.QSize(181, 31))
         self.TotAvgForm.setOrientation(QtCore.Qt.Horizontal)
@@ -145,12 +145,13 @@ class Ui_Form(object):
         font.setPointSize(18)
         self.TotAvgVL.setFont(font)
         self.TotAvgVL.setObjectName("TotAvgVL")
-        self.gridLayout.addWidget(self.TotAvgForm, 2, 7, 1, 2)"""
-        """self.StDevLabel = QtWidgets.QLabel(self.splitter_2)
+        self.gridLayout.addWidget(self.TotAvgForm, 5, 0, 1, 5 )
+        self.StDevLabel = QtWidgets.QLabel(self.splitter_2)
         self.StDevLabel.setMinimumSize(QtCore.QSize(81, 31))
         self.StDevLabel.setMaximumSize(QtCore.QSize(91, 41))
         font = QtGui.QFont()
         font.setPointSize(18)
+        
         self.StDevLabel.setFont(font)
         self.StDevLabel.setObjectName("StDevLabel")
         self.StDevVL = QtWidgets.QLabel(self.splitter_2)
@@ -160,9 +161,10 @@ class Ui_Form(object):
         font.setPointSize(18)
         self.StDevVL.setFont(font)
         self.StDevVL.setObjectName("StDevVL")
-        self.gridLayout.addWidget(self.splitter_2, 2, 4, 1, 1)
+        self.gridLayout.addWidget(self.splitter_2, 5, 5, 1, 1)
+        
         self.splitter = QtWidgets.QSplitter(Form)
-        self.splitter.setMinimumSize(QtCore.QSize(111, 31))
+        self.splitter.setMinimumSize(QtCore.QSize(0, 31))
         self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.splitter.setObjectName("splitter")
         self.StErrLabel = QtWidgets.QLabel(self.splitter)
@@ -179,7 +181,7 @@ class Ui_Form(object):
         font.setPointSize(18)
         self.StErrVL.setFont(font)
         self.StErrVL.setObjectName("StErrVL")
-        self.gridLayout.addWidget(self.splitter, 2, 5, 1, 1)"""
+        self.gridLayout.addWidget(self.splitter, 5, 6, 1, 1)
 ###-------------------------------------------------------------------------###  
         
         
@@ -219,18 +221,18 @@ class Ui_Form(object):
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">0.10</span></p></body></html>"))
         
-        self.PhotonLabel.setText(_translate("Form", "Rate"))
-        self.PhotonVL.setText(_translate("Form", "0"))
+        self.CountRateLabel.setText(_translate("Form", "Rate"))
+        self.CountRateVL.setText(_translate("Form", "0"))
         self.StartBtn.setText(_translate("Form", "START"))
         self.StopBtn.setText(_translate("Form", "STOP"))
         self.TimeLabel.setText(_translate("Form", "Time (s)"))
         self.TimeVL.setText(_translate("Form", "0"))
         
-##---------------------------------------------------------------------------##    
-        """self.TotAvgLabel.setText(_translate("Form", "Total Average"))
-        #self.TotAvgVL.setText(_translate("Form", "0"))
+###-----------------------stuff to evaluate APD's---------------------------### 
+        self.TotAvgLabel.setText(_translate("Form", "Average Rate"))
+        self.TotAvgVL.setText(_translate("Form", "0"))
         self.StDevLabel.setText(_translate("Form", "St. Dev"))
         self.StDevVL.setText(_translate("Form", "0"))
         self.StErrLabel.setText(_translate("Form", "St. Err"))
-        self.StErrVL.setText(_translate("Form", "0"))"""
+        self.StErrVL.setText(_translate("Form", "0"))
 ##---------------------------------------------------------------------------##
