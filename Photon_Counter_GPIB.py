@@ -20,12 +20,14 @@ import serial
 
 #------------------------ Setting up Arduino Connectivity---------------------#
 arduino = serial.Serial('COM5', 9600)
+arduino.close()
 
 #--------------------------Setting Up GPIB Connectivity-----------------------#
 
 rm = visa.ResourceManager()
 instList = rm.list_resources()
 print(instList)
+
 
 GPIBName = ''
 for instr in instList:
@@ -42,10 +44,8 @@ global temp
 
 
 #This line formats the categories of the data for a text file.
-Header = "Time (s),   Total Counts,   Rate (counts/period),   average rate,   StDev,   StErr\n\n"
+Header = "Time (s), Total Counts, Rate (counts/period), \n\n"
 
-Handle = ""         #Stores a name to use for saved files from current session
-FileName = ""       #For the SAVED data file
 
 #L = long, S = short
 DateL = datetime.date.today().isoformat()      # = yyyy-mm-dd
@@ -53,17 +53,13 @@ DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]   # = y[2:3]mmdd
 
 TimeL = str(datetime.datetime.now().time())         ###################
 TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
-folder = DateL + "_" + TimeS + "_SavedData"  
-#The directory FileName goes in, look in SavedData folder in documents!
-saveDir = "C:/Users/HorowitzLab/Documents/SavedData/" + folder
-os.makedirs(saveDir)
-os.chdir(saveDir)
 
 
 #This function is called by Update().                                           ##if you want to save average and its uncertainty##
 def AddData(dataTimes, counts, rates):                                          #, avg, stdev, sterr):
     """Given three lists of the same length, add all the data to data file"""
-
+   
+    
     for entry in range(len(dataTimes)):
         DataString = (str(dataTimes[entry]) + ",   " + str(counts[entry]) +
                       ",   " + str(rates[entry]) + "\n")                        #+ ",   " + str(avg) + ",   " + 
@@ -73,8 +69,7 @@ def AddData(dataTimes, counts, rates):                                          
   
 
 #This function is called by Stop_fxn().
-def FileSave(RunCount):             
-    
+def FileSave(RunCount):        
     temp.close()
     print("Here is your file: \n\n")
     data = open(tempFileName).read()
@@ -88,6 +83,8 @@ def FileSave(RunCount):
 
 #----------------------------Establishing Variables---------------------------#
 class MainApp(sr400_GUI.Ui_Form):
+    
+    
     #lists and variables
     AS = ""
     curTimeVal = 0
@@ -145,7 +142,6 @@ class MainApp(sr400_GUI.Ui_Form):
         TSETText = self.TSETBox.toPlainText()
         #convert string to proper float and add dwell time
         self.TimeInt = self.TSETtoFloat(TSETText) + 0.002
-        #get value ot threshold and assert it's in correct form
         #set the sr400 to that time period
         sr400.write('cp2, ' + TSETText)
     
@@ -175,13 +171,16 @@ class MainApp(sr400_GUI.Ui_Form):
         #stop button gets dissablec after being clicked, start button gets enabled    
         self.StopBtn.setEnabled(False)
         self.StartBtn.setEnabled(True)
-        
+        self.checkBox.setEnabled(True)
         #tells Photon counter to stop counting
         sr400.write('cr')
         
         self.graphTimer.stop()
-        FileSave(self.RunCount)
-        
+        if self.checkBox.isChecked():
+            FileSave(self.RunCount)
+        else:
+            print("")
+            print("you did not save your data")
         #reset the threshold limit, close valve and close serial communication
         self.Threshold = 0
         arduino.write(b'0')
@@ -202,16 +201,17 @@ class MainApp(sr400_GUI.Ui_Form):
         #enable/disable buttons
         self.StopBtn.setEnabled(True)
         self.StartBtn.setEnabled(False)
-
+        self.checkBox.setEnabled(False)
         #sets the time interval through tset
         self.TSET_fxn()
-
+        
         #sets dwell time, reset and start the counter
         sr400.write("DT 2E-3")
         sr400.write("cr")
         sr400.write("cs")
         
-        self.FileSetup()
+        if self.checkBox.isChecked():
+              self.FileSetup()
         
         #starts the QTimer at timeInt, already includes 2ms dwell time
         self.graphTimer.start((self.TimeInt-.002) * 1000)
@@ -221,6 +221,12 @@ class MainApp(sr400_GUI.Ui_Form):
         """sets up files"""
         TimeL = str(datetime.datetime.now().time())
         TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
+        folder = DateL + "_" + TimeS + "_SavedData"  
+        #The directory FileName goes in, look in SavedData folder in documents!
+        saveDir = "C:/Users/HorowitzLab/Documents/SavedData/" + folder 
+        os.makedirs(saveDir)
+        os.chdir(saveDir)
+        
         self.RunCount += 1
         global tempFileName 
         tempFileName = (DateS + "_Data_" + TimeS + ".csv")
@@ -236,8 +242,8 @@ class MainApp(sr400_GUI.Ui_Form):
         countVals = []
         timeVals = []
         rateVals = []
- 
-        
+    #stat = sr400.write("SS{7}")
+    #print(stat)
         #poll for data until get -1
         data = int(sr400.query("QA " + str(self.curPeriod))) 
         while (data > -1):
@@ -247,18 +253,14 @@ class MainApp(sr400_GUI.Ui_Form):
             self.curTimeVal = round(self.curTimeVal, 3)
             timeVals.append(self.curTimeVal)
             rateVals.append(round(data / self.TimeInt, 1)) 
-            #increase curPeriod, query for next data point
-            
             self.Ratelst.append(rateVals[0])
-            
             self.average = round(sum(self.Ratelst)/self.curPeriod, 1)
             self.StDev = round(np.std(self.Ratelst), 3)
             self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 3)
-            #print(str(self.average) + ", " + str(self.StDev) + ", " + str(self.StErr))
+            #increase curPeriod, query for next data point
             self.curPeriod += 1
-            
             data = int(sr400.query("QA " + str(self.curPeriod)))
-        
+            
         #shift window if enought time passed
         if (self.curTimeVal > self.scrollCounter * self.scrollWidth):
             self.scroll()
@@ -272,10 +274,11 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
         
-        self.                                                                                                                                                                                    valve(self.Ratelst)
-                                                                                ##if you want to save average and its uncertainty##
-        AddData(timeVals, countVals, rateVals)                                  #, self.average, self.StDev, self.StErr )
-    
+        self.valve(self.Ratelst)
+        
+        if self.checkBox.isChecked():                                                                       ##if you want to save average and its uncertainty##
+            AddData(timeVals, countVals, rateVals)                                  #, self.average, self.StDev, self.StErr )
+            
     
     def scroll(self):
         """ scrolls the window"""

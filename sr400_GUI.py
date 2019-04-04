@@ -53,8 +53,8 @@ class Ui_Form(object):
         self.TSETLabel1.setObjectName("TSETLabel1")
         self.gridLayout.addWidget(self.TSETLabel1, 1, 5, 1, 1)
         self.TSETBox1 = QtWidgets.QTextEdit(Form)
-        self.TSETBox1.setMinimumSize(QtCore.QSize(100, 31))
-        self.TSETBox1.setMaximumSize(QtCore.QSize(100, 31))
+        self.TSETBox1.setMinimumSize(QtCore.QSize(250, 31))
+        self.TSETBox1.setMaximumSize(QtCore.QSize(250, 31))
         self.TSETBox1.setObjectName("TSETBox1")
         self.gridLayout.addWidget(self.TSETBox1, 1, 6, 1, 1)
         
@@ -124,8 +124,16 @@ class Ui_Form(object):
         self.CountRateVL.setFont(font)
         self.CountRateVL.setObjectName("CountRateVL")
         self.gridLayout.addWidget(self.CountRateForm, 2, 6, 1, 1)
-
-###-----------------------stuff to evaluate APD's---------------------------### 
+        
+        self.checkBox = QtWidgets.QCheckBox(Form)
+        self.checkBox.setGeometry(QtCore.QRect(210, 50, 111, 51))
+        font = QtGui.QFont()
+        font.setPointSize(18)
+        self.checkBox.setFont(font)
+        self.checkBox.setObjectName("checkBox")
+        self.gridLayout.addWidget(self.checkBox, 2, 2, 1, 1)
+        
+###-----------------stuff to evaluate APD's performance---------------------### 
         
         self.TotAvgForm = QtWidgets.QSplitter(Form)
         self.TotAvgForm.setMinimumSize(QtCore.QSize(181, 31))
@@ -219,7 +227,7 @@ class Ui_Form(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">0.10</span></p></body></html>"))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">10000</span></p></body></html>"))
         
         self.CountRateLabel.setText(_translate("Form", "Rate"))
         self.CountRateVL.setText(_translate("Form", "0"))
@@ -227,6 +235,7 @@ class Ui_Form(object):
         self.StopBtn.setText(_translate("Form", "STOP"))
         self.TimeLabel.setText(_translate("Form", "Time (s)"))
         self.TimeVL.setText(_translate("Form", "0"))
+        self.checkBox.setText(_translate("Form", "Save"))
         
 ###-----------------------stuff to evaluate APD's---------------------------### 
         self.TotAvgLabel.setText(_translate("Form", "Average Rate"))
