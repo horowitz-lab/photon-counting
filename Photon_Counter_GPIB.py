@@ -41,8 +41,11 @@ sr400.timeout = 1000
                           
                            #__Defining Variables__#
 global temp
-
-
+print("")
+print("")
+print("####--------------------------------------------------------####")
+print("     REMEMBER TO TURN ON SR400 AND CONNECT/POWER THE APD!!!")
+print("####--------------------------------------------------------####")
 #This line formats the categories of the data for a text file.
 Header = "Time (s), Total Counts, Rate (counts/period), \n\n"
 
