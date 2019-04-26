@@ -194,10 +194,11 @@ class Ui_Form(object):
         
         
         #countrate graph
-        self.rvtGraph = PlotWidget(Form, title = "Rate v Time", labels = 
-                                   {"left" : "Rate (Counts/period)", 
+        self.rvtGraph = PlotWidget(Form, title = "Rate (counts/second) v Time (seconds)", labels = 
+                                   {"left" : "Rate (Counts/second)", 
                                     "bottom" : "Time (seconds)"}, 
                                     clipToView = True)
+        
         self.rvtGraph.setObjectName("rvtGraph")
         self.rvtGraph.setXRange(0, 20)
         self.gridLayout.addWidget(self.rvtGraph, 3, 0, 1, 10)
@@ -229,7 +230,7 @@ class Ui_Form(object):
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">10000</span></p></body></html>"))
         
-        self.CountRateLabel.setText(_translate("Form", "Rate"))
+        self.CountRateLabel.setText(_translate("Form", "Rate(1/s)"))
         self.CountRateVL.setText(_translate("Form", "0"))
         self.StartBtn.setText(_translate("Form", "START"))
         self.StopBtn.setText(_translate("Form", "STOP"))
@@ -238,7 +239,7 @@ class Ui_Form(object):
         self.checkBox.setText(_translate("Form", "Save"))
         
 ###-----------------------stuff to evaluate APD's---------------------------### 
-        self.TotAvgLabel.setText(_translate("Form", "Average Rate"))
+        self.TotAvgLabel.setText(_translate("Form", "Avg Rate(1/s)"))
         self.TotAvgVL.setText(_translate("Form", "0"))
         self.StDevLabel.setText(_translate("Form", "St. Dev"))
         self.StDevVL.setText(_translate("Form", "0"))

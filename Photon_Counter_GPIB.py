@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+0#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jun 23 14:23:25 2017
@@ -18,6 +18,12 @@ import os
 import numpy as np
 import serial
 
+#-------------------------------just a reminder-------------------------------#
+print("")
+print("")
+print("####--------------------------------------------------------####")
+print("     REMEMBER TO TURN ON SR400 AND CONNECT/POWER THE APD!!!")
+print("####--------------------------------------------------------####")
 #------------------------ Setting up Arduino Connectivity---------------------#
 arduino = serial.Serial('COM5', 9600)
 arduino.close()
@@ -41,11 +47,7 @@ sr400.timeout = 1000
                           
                            #__Defining Variables__#
 global temp
-print("")
-print("")
-print("####--------------------------------------------------------####")
-print("     REMEMBER TO TURN ON SR400 AND CONNECT/POWER THE APD!!!")
-print("####--------------------------------------------------------####")
+
 #This line formats the categories of the data for a text file.
 Header = "Time (s), Total Counts, Rate (counts/period), \n\n"
 
@@ -89,7 +91,7 @@ class MainApp(sr400_GUI.Ui_Form):
     
     
     #lists and variables
-    AS = ""
+   
     curTimeVal = 0
     Ratelst= []
     average = 0
@@ -97,7 +99,6 @@ class MainApp(sr400_GUI.Ui_Form):
     StErr = 0
     
     RunCount = 0      #Tallies number of measurement periods in current session
-    NPER = 2000     #the number of periods
     curPeriod = 1   #the current period (1-2000)
     scrollWidth = 20   #the width of the x axis (in s)
     scrollCounter = 1   #keeps track of the window scroll number
@@ -107,18 +108,15 @@ class MainApp(sr400_GUI.Ui_Form):
     #Threshold parameter controlled by GUI
     Threshold = 0 
     
-    #Bases = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    #Exponents = ["0",] + Bases + ["10", "11"]
+    #sets dwell time, 
+    sr400.write("DT 2E-3")
+    #set number of periods (aka time bins)
+    sr400.write("NP 2000")
     
-    currentTime = 0
-    currentCount = 0
     
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
-        
-        #setup SR400 to do nperiods = 2000
-        sr400.write('np 2000')
-        
+    
         #button connections to functions
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
@@ -189,6 +187,20 @@ class MainApp(sr400_GUI.Ui_Form):
         arduino.write(b'0')
         arduino.close()
         
+        self.curTimeVal = 0
+        self.Ratelst= []
+        self.average = 0
+        self.StDev = 0
+        self.StErr = 0
+        self.RunCount = 0      #Tallies number of measurement periods in current session
+        self.curPeriod = 1   #the current period (1 to 2000)
+        self.scrollWidth = 20   #the width of the x axis (in s)
+        self.scrollCounter = 1   #keeps track of the window scroll number
+        #Counter parameters controlled by GUI
+        self.TimeInt = 0
+        #Threshold parameter controlled by GUI
+        self.Threshold = 0 
+        
         
     def Start_fxn(self):
         """starts the data collection"""
@@ -207,9 +219,8 @@ class MainApp(sr400_GUI.Ui_Form):
         self.checkBox.setEnabled(False)
         #sets the time interval through tset
         self.TSET_fxn()
-        
-        #sets dwell time, reset and start the counter
-        sr400.write("DT 2E-3")
+       
+        #start counter
         sr400.write("cr")
         sr400.write("cs")
         
@@ -245,8 +256,16 @@ class MainApp(sr400_GUI.Ui_Form):
         countVals = []
         timeVals = []
         rateVals = []
-    #stat = sr400.write("SS{7}")
-    #print(stat)
+        
+        #once the number of periods reaches its limit, it resets to one. 
+        #this ensures that curperiod properly resets as well,
+        #without having to deal with horrible lag times
+        if self.curPeriod == 2000:
+            self.curPeriod = 1
+            sr400.write("cr")
+            sr400.write("cs")
+            
+            
         #poll for data until get -1
         data = int(sr400.query("QA " + str(self.curPeriod))) 
         while (data > -1):
@@ -255,11 +274,14 @@ class MainApp(sr400_GUI.Ui_Form):
             self.curTimeVal += self.TimeInt
             self.curTimeVal = round(self.curTimeVal, 3)
             timeVals.append(self.curTimeVal)
-            rateVals.append(round(data / self.TimeInt, 1)) 
+            rateVals.append(round(data / (self.TimeInt-0.002), 1))
             self.Ratelst.append(rateVals[0])
+            print(rateVals[0])
             self.average = round(sum(self.Ratelst)/self.curPeriod, 1)
             self.StDev = round(np.std(self.Ratelst), 3)
             self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 3)
+ 
+            
             #increase curPeriod, query for next data point
             self.curPeriod += 1
             data = int(sr400.query("QA " + str(self.curPeriod)))
@@ -272,7 +294,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
         #put in all the values into their respected places in GUI
         self.TimeVL.setText(str(self.curTimeVal))
-        self.CountRateVL.setText(str(rateVals[-1]))
+        #self.CountRateVL.setText(str(rateVals[-1])
         self.TotAvgVL.setText(str(self.average))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
