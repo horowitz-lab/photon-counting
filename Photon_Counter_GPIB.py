@@ -301,7 +301,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
         #put in all the values into their respected places in GUI
         self.TimeVL.setText(str(self.curTimeVal))
-        #self.CountRateVL.setText(str(rateVals[-1]))
+        self.CountRateVL.setText(str(rateVals[-1]))
         self.TotAvgVL.setText(str(self.average))
         self.StDevVL.setText(str(self.StDev))
         self.StErrVL.setText(str(self.StErr))
