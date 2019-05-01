@@ -99,16 +99,17 @@ class MainApp(sr400_GUI.Ui_Form):
     average = 0
     StDev = 0
     StErr = 0
-    
+    #Counter parameters controlled by GUI
+    TimeInt = 0
     RunCount = 0      #Tallies number of measurement periods in current session
     curPeriod= int(sr400.query("NN"))   #the current period (1-2000)
     print("hi")
     print(curPeriod)
-    scrollWidth = 20   #the width of the x axis (in s)
+    scrollWidth = 0 #the width of the x axis (in s) when graph scrolls
+    scaleWidth = 20 #the width of the x axis (in s) when graph scales
     scrollCounter = 1   #keeps track of the window scroll number
     
-    #Counter parameters controlled by GUI
-    TimeInt = 0
+    
     #Threshold parameter controlled by GUI
     Threshold = 0 
     
@@ -151,6 +152,8 @@ class MainApp(sr400_GUI.Ui_Form):
         TSET = str(self.TSETtoFloat(TSETText) * 10**7)
         #convert string to proper float and add dwell time
         self.TimeInt = self.TSETtoFloat(TSETText) + 0.002
+        self.scrollWidth = ((self.TimeInt-.002)* 50)
+        
         #set the sr400 to that time period
         sr400.write('CP2, ' + TSET)
     
@@ -180,12 +183,14 @@ class MainApp(sr400_GUI.Ui_Form):
         #stop button gets dissablec after being clicked, start button gets enabled    
         self.StopBtn.setEnabled(False)
         self.StartBtn.setEnabled(True)
-        self.checkBox.setEnabled(True)
+        #scale checkbox begs enabled
+        self.checkBox1.setEnabled(True)
+        #tells graphtimer to stop
+        self.graphTimer.stop()
         #tells Photon counter to stop counting
+        sr400.write('cr')
         sr400.write('cl')
         
-        
-        self.graphTimer.stop()
         if self.checkBox.isChecked():
             self.FileSetup()
             AddData(self.Timelst, self.Countlst, self.Ratelst) 
@@ -198,27 +203,34 @@ class MainApp(sr400_GUI.Ui_Form):
         self.Threshold = 0
         arduino.write(b'0')
         arduino.close()
-
+        
         
     def Start_fxn(self):
         """starts the data collection"""
         #reset data and tracking variables
         self.TSET_fxn() 
         self.curTimeVal = 0
-        #self.curPeriod = 1
-        self.scrollCounter = 1
-        
+        #scale checkbox begs disabled
+        self.checkBox1.setEnabled(False)
         #clear graph and reset window range
         self.rvtGraph.clear()
-        self.rvtGraph.setXRange(0, self.scrollWidth)
+        if self.checkBox1.isChecked():
+            self.rvtGraph.setXRange(0, self.scaleWidth)
+        else: 
+            self.rvtGraph.setXRange(0, int(self.scrollWidth))
+
+        #reset data and tracking variables
+        self.TSET_fxn() 
+        self.curTimeVal = 0
+        #self.curPeriod = 1
+        self.scrollCounter = 1
         
         #enable/disable buttons
         self.StopBtn.setEnabled(True)
         self.StartBtn.setEnabled(False)
         #self.checkBox.setEnabled(False)
         #sets the time interval through tset
-       
-       
+
         #sets dwell time, 
         sr400.write("DT 2E-3")
         #set number of periods (aka time bins)
@@ -227,10 +239,6 @@ class MainApp(sr400_GUI.Ui_Form):
         sr400.write("cr")
         sr400.write("cs")
         sr400.write("NE 1")
-        #print(int(sr400.query("NN")))
-        
-        #if self.checkBox.isChecked():
-        #      self.FileSetup()
         
         #starts the QTimer at timeInt, already includes 2ms dwell time
         self.graphTimer.start((self.TimeInt) * 1000)
@@ -265,7 +273,7 @@ class MainApp(sr400_GUI.Ui_Form):
         #poll for data until get -1
         
         self.curPeriod= int(sr400.query("NN"))
-        print("hi")
+        print("new")
         print(self.curPeriod)
         data = int(sr400.query("QA " + str(self.curPeriod))) 
         
@@ -275,27 +283,42 @@ class MainApp(sr400_GUI.Ui_Form):
             countVals.append(data)
             self.curTimeVal += self.TimeInt
             self.curTimeVal = round(self.curTimeVal, 3)
+            print(self.curTimeVal)
             timeVals.append(self.curTimeVal)
-           
+            print(timeVals)
             rateVals.append(round(data / (self.TimeInt-0.002), 1))
-            print(self.TimeInt)
             print(rateVals)
-            self.Ratelst.append(rateVals[0])
-            self.Timelst.append(timeVals[0])
-            self.Countlst.append(countVals[0])
+            
+            #at small time bins, the code will try to catch up to the measurements being taken
+            # and produce a rateVals with multiple measurements, with only the last one being new data.
+            #this if else loop ensures that this lag doesnt interfere with data collection
+            if len(rateVals) > 1:
+                self.Ratelst.append(rateVals[-1])
+                self.Countlst.append(countVals[-1])
+                self.Timelst.append(round(self.curTimeVal,3))
+                
+            else:        
+                self.Ratelst.append(rateVals[0])
+                self.Timelst.append(round(timeVals[0],3))
+                self.Countlst.append(countVals[0])
            
             self.average = round(sum(self.Ratelst)/self.curPeriod, 1)
-            self.StDev = round(np.std(self.Ratelst), 3)
-            self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 3)
- 
-            
+            self.StDev = round(np.std(self.Ratelst), 0)
+            self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 0)
+
             #increase curPeriod, query for next data point
             self.curPeriod += 1
             data = int(sr400.query("QA " + str(self.curPeriod)))
             
-        #shift window if enought time passed
-        if (self.curTimeVal > self.scrollCounter * self.scrollWidth):
-            self.scroll()
+        #shift window if enough time passes
+        """need to add a gui checker box to chose scale """
+        if self.checkBox1.isChecked():
+            if (self.curTimeVal > self.scaleWidth * self.scrollCounter):
+                self.scale()
+        else:
+            if (self.curTimeVal > self.scrollWidth * self.scrollCounter):
+                self.scroll()
+        
         
         #graph: x = time, y = rate, or photon count/period
         self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
@@ -303,28 +326,27 @@ class MainApp(sr400_GUI.Ui_Form):
         self.TimeVL.setText(str(self.curTimeVal))
         self.CountRateVL.setText(str(rateVals[-1]))
         self.TotAvgVL.setText(str(self.average))
-        self.StDevVL.setText(str(self.StDev))
-        self.StErrVL.setText(str(self.StErr))
-        
+        self.StDevVL.setText(str(self.StDev) + "(1/s)")
+        self.StErrVL.setText(str(self.StErr) + "(1/s)")
         self.valve(self.Ratelst)
         
-        #once the number of periods reaches its limit, it resets to one. 
-        #this ensures that curperiod properly resets as well,
-        #without having to deal with horrible lag times
-        """if self.curPeriod == 2000:
-            self.curPeriod = 1
-            sr400.write("cr")
-            sr400.write("cs")"""
-            
-        #if self.checkBox.isChecked():                                                                       ##if you want to save average and its uncertainty##
-           # AddData(timeVals, countVals, rateVals)                                  #, self.average, self.StDev, self.StErr )
-            
-    
+
     def scroll(self):
-        
-        """ scrolls the window"""
-        self.rvtGraph.setXRange(0, self.scrollWidth * (self.scrollCounter + 1))
+        """ scrolls the window, clearing old data off the graph. does not 
+            experience lag. (lag mainly affects stoping measuring and starting
+            a new measurement)"""
+    
+        self.rvtGraph.clear()
+        self.rvtGraph.setXRange(self.scrollWidth * (self.scrollCounter), self.scrollWidth * (self.scrollCounter + 1))
         self.scrollCounter += 1
+        
+        
+    def scale(self):
+        """ scales the window to fit all the data. laggy when dealing with 
+            large quantities of data, but good to see thigs slow phenomena
+            such as photo-bleaching"""
+        self.rvtGraph.setXRange(0, self.scaleWidth * (self.scrollCounter + 1))
+        self.scrollCounter += 1     
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

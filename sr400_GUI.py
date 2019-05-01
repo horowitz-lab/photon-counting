@@ -38,8 +38,8 @@ class Ui_Form(object):
         self.TSETLabel.setObjectName("TSETLabel")
         self.gridLayout.addWidget(self.TSETLabel, 1, 0, 1, 1)
         self.TSETBox = QtWidgets.QTextEdit(Form)
-        self.TSETBox.setMinimumSize(QtCore.QSize(71, 31))
-        self.TSETBox.setMaximumSize(QtCore.QSize(71, 31))
+        self.TSETBox.setMinimumSize(QtCore.QSize(153, 31))
+        self.TSETBox.setMaximumSize(QtCore.QSize(153, 31))
         self.TSETBox.setObjectName("TSETBox")
         self.gridLayout.addWidget(self.TSETBox, 1, 2, 1, 2)
         
@@ -133,6 +133,14 @@ class Ui_Form(object):
         self.checkBox.setObjectName("checkBox")
         self.gridLayout.addWidget(self.checkBox, 2, 2, 1, 1)
         
+        self.checkBox1 = QtWidgets.QCheckBox(Form)
+        self.checkBox1.setGeometry(QtCore.QRect(210, 50, 111, 51))
+        font = QtGui.QFont()
+        font.setPointSize(18)
+        self.checkBox1.setFont(font)
+        self.checkBox1.setObjectName("checkBox1")
+        self.gridLayout.addWidget(self.checkBox1, 2, 3, 1, 1)
+        
 ###-----------------stuff to evaluate APD's performance---------------------### 
         
         self.TotAvgForm = QtWidgets.QSplitter(Form)
@@ -153,7 +161,7 @@ class Ui_Form(object):
         font.setPointSize(18)
         self.TotAvgVL.setFont(font)
         self.TotAvgVL.setObjectName("TotAvgVL")
-        self.gridLayout.addWidget(self.TotAvgForm, 5, 0, 1, 5 )
+        self.gridLayout.addWidget(self.TotAvgForm, 6, 0, 1, 5 )
         self.StDevLabel = QtWidgets.QLabel(self.splitter_2)
         self.StDevLabel.setMinimumSize(QtCore.QSize(81, 31))
         self.StDevLabel.setMaximumSize(QtCore.QSize(91, 41))
@@ -169,7 +177,7 @@ class Ui_Form(object):
         font.setPointSize(18)
         self.StDevVL.setFont(font)
         self.StDevVL.setObjectName("StDevVL")
-        self.gridLayout.addWidget(self.splitter_2, 5, 5, 1, 1)
+        self.gridLayout.addWidget(self.splitter_2, 6, 5, 1, 1)
         
         self.splitter = QtWidgets.QSplitter(Form)
         self.splitter.setMinimumSize(QtCore.QSize(0, 31))
@@ -189,7 +197,7 @@ class Ui_Form(object):
         font.setPointSize(18)
         self.StErrVL.setFont(font)
         self.StErrVL.setObjectName("StErrVL")
-        self.gridLayout.addWidget(self.splitter, 5, 6, 1, 1)
+        self.gridLayout.addWidget(self.splitter, 6, 6, 1, 1)
 ###-------------------------------------------------------------------------###  
         
         
@@ -201,7 +209,7 @@ class Ui_Form(object):
         
         self.rvtGraph.setObjectName("rvtGraph")
         self.rvtGraph.setXRange(0, 20)
-        self.gridLayout.addWidget(self.rvtGraph, 3, 0, 1, 10)
+        self.gridLayout.addWidget(self.rvtGraph, 4, 0, 1, 10)
         
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -221,7 +229,7 @@ class Ui_Form(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">0.10</span></p></body></html>"))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-size:13pt;\">0.1</span></p></body></html>"))
         
         self.TSETLabel1.setText(_translate("Form", "Set Threshold (counts/s)"))
         self.TSETBox1.setHtml(_translate("Form", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
@@ -237,9 +245,9 @@ class Ui_Form(object):
         self.TimeLabel.setText(_translate("Form", "Time (s)"))
         self.TimeVL.setText(_translate("Form", "0"))
         self.checkBox.setText(_translate("Form", "Save"))
-        
+        self.checkBox1.setText(_translate("Form", "Scale"))
 ###-----------------------stuff to evaluate APD's---------------------------### 
-        self.TotAvgLabel.setText(_translate("Form", "Avg Rate(1/s)"))
+        self.TotAvgLabel.setText(_translate("Form", "Avg Rate (1/s)"))
         self.TotAvgVL.setText(_translate("Form", "0"))
         self.StDevLabel.setText(_translate("Form", "St. Dev"))
         self.StDevVL.setText(_translate("Form", "0"))
