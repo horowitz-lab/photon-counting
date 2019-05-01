@@ -49,7 +49,7 @@ sr400.timeout = 1000
 global temp
 
 #This line formats the categories of the data for a text file.
-Header = "Time (s), Total Counts, Rate (counts/period), \n\n"
+Header = "Time (s), Total Counts, Rate (counts/s), \n\n"
 
 
 #L = long, S = short
