@@ -204,6 +204,10 @@ class MainApp(sr400_GUI.Ui_Form):
         arduino.write(b'0')
         arduino.close()
         
+        #reset lists
+        self.Ratelst = []
+        self.Timelst = []
+        self.Countlst = []
         
     def Start_fxn(self):
         """starts the data collection"""
