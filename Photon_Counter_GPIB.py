@@ -34,7 +34,6 @@ rm = visa.ResourceManager()
 instList = rm.list_resources()
 print(instList)
 
-
 GPIBName = ''
 for instr in instList:
     if instr.find('GPIB') == 0:
@@ -56,31 +55,30 @@ Header = "Time (s), Total Counts, Rate (counts/s), \n\n"
 DateL = datetime.date.today().isoformat()      # = yyyy-mm-dd
 DateS = DateL[2:3] + DateL[5:6] + DateL[8:9]   # = y[2:3]mmdd
 
-TimeL = str(datetime.datetime.now().time())         ###################
+TimeL = str(datetime.datetime.now().time())         
+#this version of windows does not allow you to save a file with ":" in its title,
+# so i had to replace all the colons with semi-colons.
 TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
 
 
-#This function is called by Update().                                           ##if you want to save average and its uncertainty##
-def AddData(dataTimes, counts, rates):                                          #, avg, stdev, sterr):
+#This function is called by Update().                                          
+def AddData(dataTimes, counts, rates):                                          
     """Given three lists of the same length, add all the data to data file"""
     for entry in range(len(dataTimes)):
         
         DataString = (str(dataTimes[entry]) + ",   " + str(counts[entry]) +
-                      ",   " + str(rates[entry]) + "\n")                        #+ ",   " + str(avg) + ",   " + 
-        
-        temp.write(DataString)                                                                        #str(stdev) +  ",   " +  str(sterr) + "\n")
-             
+                      ",   " + str(rates[entry]) + "\n")                        
+        # writes datastring into tempporary data file
+        temp.write(DataString)                                                                        
     
-  
 
 #This function is called by Stop_fxn().
 def FileSave(RunCount):        
     temp.close()
     print("Here is your file: \n\n")
+    #reads the data just saved into our temporary data file
     data = open(tempFileName).read()
-
     print(data)
-    
     #Done to ensure temp can be properly accessed and deleted now that it
     #isn't necessary anymore.
     print("\nYour file has been successfully saved!")
@@ -90,25 +88,34 @@ def FileSave(RunCount):
 class MainApp(sr400_GUI.Ui_Form):
     
     
-    #lists and variables
-   
+#lists and variables-:
+    #the current time in secons
     curTimeVal = 0
-    Ratelst= []
+    #list of all the count rates
+    Ratelst= [] #
+    #list of all the times where collection of data occurs
     Timelst=[]
+    #list of all the counts
     Countlst = []
+    #average rate
     average = 0
+    #standard deviation of average rate
     StDev = 0
+    #standard error of average rate
     StErr = 0
     #Counter parameters controlled by GUI
     TimeInt = 0
-    RunCount = 0      #Tallies number of measurement periods in current session
-    curPeriod= int(sr400.query("NN"))   #the current period (1-2000)
-    print("hi")
-    print(curPeriod)
+    #Tallies number of measurement periods in current session
+    RunCount = 0   
+    #the current period (1-2000), should be 0 when not counting.
+    curPeriod= int(sr400.query("NN"))   
+    print("new")
+    print(curPeriod)\
+    
     scrollWidth = 0 #the width of the x axis (in s) when graph scrolls
     scaleWidth = 20 #the width of the x axis (in s) when graph scales
     scrollCounter = 1   #keeps track of the window scroll number
-    
+    lag = 0 #the number of times lag has occured in a row
     
     #Threshold parameter controlled by GUI
     Threshold = 0 
@@ -126,6 +133,7 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.clicked.connect(self.Start_fxn)
         self.StopBtn.clicked.connect(self.Stop_fxn)
         
+        #enable/disable start and stop buttons
         self.StopBtn.setEnabled(False)
         self.StartBtn.setEnabled(True)
         
@@ -139,7 +147,7 @@ class MainApp(sr400_GUI.Ui_Form):
 #--------------Formatting Functions-------------------------------------------#
     def TSETtoFloat(self, text):
         #converts a string of the form NUMeNUM to an float
-        return float(text) # * 10 ** int(text[2:]) / (1e7)
+        return float(text)
     
     
 #--------------------------GUI Widget Functions-------------------------------#
@@ -152,6 +160,8 @@ class MainApp(sr400_GUI.Ui_Form):
         TSET = str(self.TSETtoFloat(TSETText) * 10**7)
         #convert string to proper float and add dwell time
         self.TimeInt = self.TSETtoFloat(TSETText) + 0.002
+        #set the width of the graph to be 50 times longer than the selected 
+        #time bin time
         self.scrollWidth = ((self.TimeInt-.002)* 50)
         
         #set the sr400 to that time period
@@ -175,7 +185,8 @@ class MainApp(sr400_GUI.Ui_Form):
             arduino.write(b'1')
         #if count rate is below the threshold, de-actuate valve.     
         elif rate < self.Threshold:  
-            arduino.write(b'0')    
+            arduino.write(b'0')  
+            
         
     def Stop_fxn(self):
         """stops the data collection, commands data to be saved, 
@@ -187,24 +198,34 @@ class MainApp(sr400_GUI.Ui_Form):
         self.checkBox1.setEnabled(True)
         #tells graphtimer to stop
         self.graphTimer.stop()
-        #tells Photon counter to stop counting
+        #tells Photon counter to stop counting, reset data and tracking variables
         sr400.write('cr')
+        #resets photon counter to factory settings 
+        #(needed just in case a hardware issuephoton counter such as not 
+        #turning on APD causes the SR400 to bug out)
         sr400.write('cl')
         
+        #if you select to save the data, once you click the stop button,
         if self.checkBox.isChecked():
+            #set up a folder in savedData to store our file in
             self.FileSetup()
-            AddData(self.Timelst, self.Countlst, self.Ratelst) 
+            #add our data to a temporary file
+            AddData(self.Timelst, self.Countlst, self.Ratelst)
+            #save that temporary file
             FileSave(self.RunCount)
-            
+        #if you didnt select to save your data, say that    
         else:
             print("")
             print("you did not save your data")
-        #reset the threshold limit, close valve and close serial communication
+            
+        #reset the threshold limit
         self.Threshold = 0
+        #close valve 
         arduino.write(b'0')
+        #close serial communication
         arduino.close()
         
-        #reset lists
+        #reset lists, so that old data is not stored in them during next measurement
         self.Ratelst = []
         self.Timelst = []
         self.Countlst = []
@@ -212,11 +233,12 @@ class MainApp(sr400_GUI.Ui_Form):
     def Start_fxn(self):
         """starts the data collection"""
         #reset data and tracking variables
+        sr400.write('cr')
+        
         self.TSET_fxn() 
         self.curTimeVal = 0
-        #scale checkbox begs disabled
-        self.checkBox1.setEnabled(False)
-        #clear graph and reset window range
+         
+        #clear graph and reset window range. this depends on if your want to scale or scroll.
         self.rvtGraph.clear()
         if self.checkBox1.isChecked():
             self.rvtGraph.setXRange(0, self.scaleWidth)
@@ -229,19 +251,22 @@ class MainApp(sr400_GUI.Ui_Form):
         #self.curPeriod = 1
         self.scrollCounter = 1
         
-        #enable/disable buttons
+        #enable/disable start and stop buttons
         self.StopBtn.setEnabled(True)
         self.StartBtn.setEnabled(False)
-        #self.checkBox.setEnabled(False)
-        #sets the time interval through tset
-
+        #scale checkbox disabled
+        self.checkBox1.setEnabled(False)
+        
         #sets dwell time, 
         sr400.write("DT 2E-3")
         #set number of periods (aka time bins)
         sr400.write("NP 2000")
-        #start counter
-        sr400.write("cr")
+        #start counter        
         sr400.write("cs")
+        #ask for the current period (1-2000) -> should = 1 here
+        self.curPeriod= int(sr400.query("NN"))
+        #When the number of time bins (Nperiods) reaches its maximum of 2000,
+        #reset to 0 and continue measuring 
         sr400.write("NE 1")
         
         #starts the QTimer at timeInt, already includes 2ms dwell time
@@ -251,13 +276,14 @@ class MainApp(sr400_GUI.Ui_Form):
     def FileSetup(self):
         """sets up files"""
         TimeL = str(datetime.datetime.now().time())
+        #this version of windows does not allow you to save a file with ":" in its title,
+        # so i had to replace all the colons with semi-colons.
         TimeS = TimeL[0:2] + ";" + TimeL[3:5] + ";" + TimeL[6:8]
         folder = DateL + "_" + TimeS + "_SavedData"  
         #The directory FileName goes in, look in SavedData folder in documents!
         saveDir = "C:/Users/HorowitzLab/Documents/SavedData/" + folder 
         os.makedirs(saveDir)
         os.chdir(saveDir)
-        
         self.RunCount += 1
         global tempFileName 
         tempFileName = (DateS + "_Data_" + TimeS + ".csv")
@@ -269,53 +295,59 @@ class MainApp(sr400_GUI.Ui_Form):
     def Update(self):
         """gets current count and updates instance variables"""
         #create list holders for times and rates
-        #get data: continually ask for i-th point until not -1, add to list
         countVals = []
         timeVals = []
         rateVals = []
         
+        
+        #get data: continually ask for i-th point until not -1, add to list
         #poll for data until get -1
         
+        #ask SR400 to give current Nperiod number
         self.curPeriod= int(sr400.query("NN"))
         print("new")
         print(self.curPeriod)
+        #ask SR400 to give the photon count
         data = int(sr400.query("QA " + str(self.curPeriod))) 
-        
+        #print(data)
         while (data > -1):
            
             #add to list, update other vals
             countVals.append(data)
             self.curTimeVal += self.TimeInt
             self.curTimeVal = round(self.curTimeVal, 3)
-            print(self.curTimeVal)
+            #print(self.curTimeVal)
             timeVals.append(self.curTimeVal)
-            print(timeVals)
+            #print(timeVals)
             rateVals.append(round(data / (self.TimeInt-0.002), 1))
+            print(data)
             print(rateVals)
             
-            #at small time bins, the code will try to catch up to the measurements being taken
+            #at small time bins (> 0.2sec), the code will try to catch up to the measurements being taken
             # and produce a rateVals with multiple measurements, with only the last one being new data.
             #this if else loop ensures that this lag doesnt interfere with data collection
-            if len(rateVals) > 1:
+            if len(rateVals) > 1: 
                 self.Ratelst.append(rateVals[-1])
+                print("EXTRA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print(timeVals)
                 self.Countlst.append(countVals[-1])
+                print(self.Ratelst)    
                 self.Timelst.append(round(self.curTimeVal,3))
-                
-            else:        
+            else:  
                 self.Ratelst.append(rateVals[0])
                 self.Timelst.append(round(timeVals[0],3))
                 self.Countlst.append(countVals[0])
-           
-            self.average = round(sum(self.Ratelst)/self.curPeriod, 1)
+            
+            #calculates the avg, stdv, sterr and appends them to their respective lists 
+            self.average = round(sum(self.Ratelst)/len(self.Ratelst), 1)
             self.StDev = round(np.std(self.Ratelst), 0)
-            self.StErr = round( self.StDev / np.sqrt(self.curPeriod), 0)
+            self.StErr = round( self.StDev / np.sqrt(len(self.Ratelst)), 0)
 
             #increase curPeriod, query for next data point
             self.curPeriod += 1
             data = int(sr400.query("QA " + str(self.curPeriod)))
             
         #shift window if enough time passes
-        """need to add a gui checker box to chose scale """
         if self.checkBox1.isChecked():
             if (self.curTimeVal > self.scaleWidth * self.scrollCounter):
                 self.scale()
