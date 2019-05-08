@@ -143,7 +143,6 @@ class MainApp(sr400_GUI.Ui_Form):
         self.graphTimer.timeout.connect(self.Update)
         
         
-    
 #--------------Formatting Functions-------------------------------------------#
     def TSETtoFloat(self, text):
         #converts a string of the form NUMeNUM to an float
