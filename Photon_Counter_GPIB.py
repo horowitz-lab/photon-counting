@@ -108,9 +108,8 @@ class MainApp(sr400_GUI.Ui_Form):
     #Tallies number of measurement periods in current session
     RunCount = 0   
     #the current period (1-2000), should be 0 when not counting.
-    curPeriod= int(sr400.query("NN"))   
-    print("new")
-    print(curPeriod)\
+    curPeriod= 0 #int(sr400.query("NN"))
+    print(curPeriod)
     
     scrollWidth = 0 #the width of the x axis (in s) when graph scrolls
     scaleWidth = 20 #the width of the x axis (in s) when graph scales
@@ -119,13 +118,7 @@ class MainApp(sr400_GUI.Ui_Form):
     
     #Threshold parameter controlled by GUI
     Threshold = 0 
-    
-    #sets dwell time, 
-    sr400.write("DT 2E-3")
-    #set number of periods (aka time bins)
-    sr400.write("NP 2000")
-    
-    
+     
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
     
@@ -247,7 +240,6 @@ class MainApp(sr400_GUI.Ui_Form):
         #reset data and tracking variables
         self.TSET_fxn() 
         self.curTimeVal = 0
-        #self.curPeriod = 1
         self.scrollCounter = 1
         
         #enable/disable start and stop buttons
@@ -255,22 +247,21 @@ class MainApp(sr400_GUI.Ui_Form):
         self.StartBtn.setEnabled(False)
         #scale checkbox disabled
         self.checkBox1.setEnabled(False)
-        
+       
         #sets dwell time, 
         sr400.write("DT 2E-3")
         #set number of periods (aka time bins)
         sr400.write("NP 2000")
-        #start counter        
-        sr400.write("cs")
         #ask for the current period (1-2000) -> should = 1 here
-        self.curPeriod= int(sr400.query("NN"))
-        #When the number of time bins (Nperiods) reaches its maximum of 2000,
         #reset to 0 and continue measuring 
         sr400.write("NE 1")
-        
+        self.curPeriod= int(sr400.query("NN"))
+        #When the number of time bins (Nperiods) reaches its maximum of 2000,
+        #start counter        
+        sr400.write("cs")
         #starts the QTimer at timeInt, already includes 2ms dwell time
         self.graphTimer.start((self.TimeInt) * 1000)
-    
+        
     
     def FileSetup(self):
         """sets up files"""
@@ -298,17 +289,13 @@ class MainApp(sr400_GUI.Ui_Form):
         timeVals = []
         rateVals = []
         
+        #ask SR400 to give current Nperiod number
+        self.curPeriod= int(sr400.query("NN"))
+        #ask SR400 to give the photon count
+        data = int(sr400.query("QA " + str(self.curPeriod))) 
         
         #get data: continually ask for i-th point until not -1, add to list
         #poll for data until get -1
-        
-        #ask SR400 to give current Nperiod number
-        self.curPeriod= int(sr400.query("NN"))
-        print("new")
-        print(self.curPeriod)
-        #ask SR400 to give the photon count
-        data = int(sr400.query("QA " + str(self.curPeriod))) 
-        #print(data)
         while (data > -1):
            
             #add to list, update other vals
@@ -319,18 +306,13 @@ class MainApp(sr400_GUI.Ui_Form):
             timeVals.append(self.curTimeVal)
             #print(timeVals)
             rateVals.append(round(data / (self.TimeInt-0.002), 1))
-            print(data)
-            print(rateVals)
             
             #at small time bins (> 0.2sec), the code will try to catch up to the measurements being taken
             # and produce a rateVals with multiple measurements, with only the last one being new data.
             #this if else loop ensures that this lag doesnt interfere with data collection
             if len(rateVals) > 1: 
                 self.Ratelst.append(rateVals[-1])
-                print("EXTRA!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                print(timeVals)
                 self.Countlst.append(countVals[-1])
-                print(self.Ratelst)    
                 self.Timelst.append(round(self.curTimeVal,3))
             else:  
                 self.Ratelst.append(rateVals[0])
