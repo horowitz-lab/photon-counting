@@ -24,6 +24,8 @@ print("")
 print("####--------------------------------------------------------####")
 print("     REMEMBER TO TURN ON SR400 AND CONNECT/POWER THE APD!!!")
 print("####--------------------------------------------------------####")
+      
+      
 #------------------------ Setting up Arduino Connectivity---------------------#
 arduino = serial.Serial('COM5', 9600)
 arduino.close()
@@ -41,6 +43,7 @@ for instr in instList:
 
 sr400 = rm.open_resource(GPIBName)
 sr400.timeout = 1000
+
 
 #--------------------------Data File Functionality----------------------------#
                           
@@ -252,11 +255,12 @@ class MainApp(sr400_GUI.Ui_Form):
         sr400.write("DT 2E-3")
         #set number of periods (aka time bins)
         sr400.write("NP 2000")
-        #ask for the current period (1-2000) -> should = 1 here
+        #When the number of time bins (Nperiods) reaches its maximum of 2000, 
         #reset to 0 and continue measuring 
         sr400.write("NE 1")
+        #ask for the current period (1-2000) -> should = 1 here
         self.curPeriod= int(sr400.query("NN"))
-        #When the number of time bins (Nperiods) reaches its maximum of 2000,
+       
         #start counter        
         sr400.write("cs")
         #starts the QTimer at timeInt, already includes 2ms dwell time
