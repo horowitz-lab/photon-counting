@@ -3,7 +3,7 @@
 """
 Created on Fri Jun 23 14:23:25 2017
 
-@authors: Mikel Zemborain, Houghton Yonge and Fuming Qiu
+@authors: Mikel Zemborain, Houghton Yonge, Fuming Qiu, and Viva R. Horowitz
 """
 
 #--------------------------------Library Imports------------------------------#
