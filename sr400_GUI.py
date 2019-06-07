@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'SR400_GUI.ui'
-#
-# Created by: PyQt5 UI code generator 5.6
-#
-# WARNING! All changes made in this file will be lost!
+# Originally created by: PyQt5 UI code generator 5.6
+# WARNING! sr400_GUI.py has been updated manually and you should no longer use SR400_GUI.ui to directly update this file.
 
 #need these imports
 from PyQt5 import QtCore, QtGui, QtWidgets
