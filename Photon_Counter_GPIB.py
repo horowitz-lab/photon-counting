@@ -3,7 +3,7 @@
 """
 Created on Fri Jun 23 14:23:25 2017
 
-@authors: Mikel Zemborain, Houghton Yonge and Fuming Qiu
+@authors: Mikel Zemborain, Houghton Yonge, Fuming Qiu, and Viva R. Horowitz
 """
 
 #--------------------------------Library Imports------------------------------#
@@ -343,7 +343,7 @@ class MainApp(sr400_GUI.Ui_Form):
         
         #graph: x = time, y = rate, or photon count/period
         self.rvtGraph.plot(timeVals, rateVals, pen = None, symbol = '+')
-        #put in all the values into their respected places in GUI
+        #put in all the values into their respective places in GUI
         self.TimeVL.setText(str(self.curTimeVal))
         self.CountRateVL.setText(str(rateVals[-1]))
         self.TotAvgVL.setText(str(self.average))
