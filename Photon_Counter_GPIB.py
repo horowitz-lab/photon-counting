@@ -110,8 +110,8 @@ class MainApp(sr400_GUI.Ui_Form):
     TimeInt = 0
     #Tallies number of measurement periods in current session
     RunCount = 0   
-    #the current period (1-2000), should be 0 when not counting.
-    curPeriod= 0 #int(sr400.query("NN"))
+    #ask for the current period (1-2000) -> should = 1 here
+    curPeriod= int(sr400.query("NN"))
     print(curPeriod)
     
     scrollWidth = 0 #the width of the x axis (in s) when graph scrolls
