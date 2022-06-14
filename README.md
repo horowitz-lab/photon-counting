@@ -11,7 +11,8 @@ Photon counting with an SR400 Photon Counter.
  SR400, AND TURN ON THE SR400! a failure to do so will cause the code or the
  SR400 to bug out
 7. Run the code by pressing the big green Play button at the top of the screen.
- An additional spyder window should pop up. Click on it to open the controll panel
+ An additional spyder window should pop up. Click on it to open the control panel.
+8. In case of a computer error that prevents an additional spyder window from popping up, check for USB connections. The SR400 needs to be connected to the computer via GPIB. We have a GPIB-USB cable that should be connected to a USB port of the computer. The Arduino needs to be connected to the computer via USB. The Arduino controls the commercial valves. (You can check the Device Manager to ensure that NI GPIB Interfaces: NI GPIB-USB-HS and Ports: Arduino Uno (COM6) are both connected.)
 8. You can set the time interval, or period, by editing the number on the white 
  box to the left, and you can set the threshold rate the same way on the box to
  the right.
